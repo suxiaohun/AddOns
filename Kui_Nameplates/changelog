@@ -1,0 +1,14 @@
+* fix lua error when forbidden nameplates are created
+* fix config page copy/reset
+
+* increase frame glow maximum brightness
+* reduce frame shadow alpha slightly
+* change default frame sizes
+* increase class powers bar size
+* fix global scale doesn't apply to class powers or boss mods when changed
+* fix global scale doesn't apply to class powers bar
+* fix lua error when creating class powers bar
+* (beta/prepatch) fix default nameplates become visible sometimes
+* bump toc
+
+* (dummy push to casually nudge curse into serving the correct version)

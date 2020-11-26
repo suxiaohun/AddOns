@@ -1,0 +1,6 @@
+## Interface: 11302
+## Title: CombatInfo
+## Notes: this is my first addon.
+
+CombatInfo.lua
+CombatInfo.xml

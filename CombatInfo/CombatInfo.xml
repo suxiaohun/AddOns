@@ -1,0 +1,50 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ .. \FrameXML\UI.xsd">
+	
+	<Button name="CombatInfoFrame" parent="UIParent" enableMouse="true" movable="true" frameStrata="LOW">
+		<Size x="275" y="100" />
+		<Anchors>
+			<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="Minimap">
+				<Offset x="-100" y="-30"/>
+			</Anchor>
+		</Anchors>
+		<Backdrop  bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11" />
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32" />
+			</EdgeSize>
+		</Backdrop>
+		
+	<Layers>
+		<Layer level="OVERPLAY">
+			<FontString name="$parentText" inherits="GameFontNormalSmall" justifyH="CENTER" setAllPoints="true" text="" />
+		</Layer>
+	</Layers>	
+	<Scripts>
+		<OnLoad>
+		    CombatInfo_OnLoad(self)
+		</OnLoad>
+		<OnEvent>
+		    CombatInfo_OnEvent(self,event,CombatLogGetCurrentEventInfo())
+		</OnEvent>
+		<OnClick>
+		    CombatInfo_ReportDPS()
+		</OnClick>
+		<OnDragStart>
+		    self:StartMoving()
+		</OnDragStart>
+		<OnDragStop>
+		    self:StopMovingOrSizing()
+		</OnDragStop>
+		
+		
+	</Scripts>
+	</Button>
+	
+	
+</Ui>
+
