@@ -84,6 +84,7 @@ L["STRING_CLICK_REPORT_LINE2"] = "|cFFFFCC22Shift+点击|r：|cFFFFEE00窗口模
 L["STRING_CLOSEALL"] = "所有Details窗口已关闭，输入'/details show'来重新打开。"
 L["STRING_COLOR"] = "颜色"
 L["STRING_COMMAND_LIST"] = "命令列表"
+L["STRING_CONTEXT"] = "环境"
 L["STRING_COOLTIP_NOOPTIONS"] = "无选项"
 L["STRING_CREATEAURA"] = "创建一个wa监视"
 L["STRING_CRITICAL_HITS"] = "致命一击"
@@ -255,8 +256,8 @@ L["STRING_GUILDDAMAGERANK_PLAYERBASE_PLAYER"] = "玩家"
 L["STRING_GUILDDAMAGERANK_PLAYERBASE_RAID"] = "所有玩家"
 L["STRING_GUILDDAMAGERANK_RAID"] = "副本"
 L["STRING_GUILDDAMAGERANK_ROLE"] = "职责"
-L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "显示历史"
-L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "显示公会排行"
+L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "历史"
+L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "公会排行"
 L["STRING_GUILDDAMAGERANK_SYNCBUTTONTEXT"] = "与公会同步"
 L["STRING_GUILDDAMAGERANK_TUTORIAL_DESC"] = "Details!会保存你与公会在首领战中造成的伤害和治疗量.\\n\\n勾选'|cFFFFFF00显示历史|r'以浏览历史记录,所有战斗记录都会显示.\\n'勾选|cFFFFFF00显示公会排行|r'会显示所选首领站中的排名数据.\\n\\n如果你是第一次使用这个工具或者你缺席了某次公会活动,点击'|cFFFFFF00与公会同步|r'按钮."
 L["STRING_GUILDDAMAGERANK_WINDOWALERT"] = "首领被击败!显示排行"
@@ -282,6 +283,7 @@ L["STRING_INFO_TUTORIAL_COMPARISON1"] = "点击 |cFFFFDD00比较|r 标签来比�
 L["STRING_INSTANCE_CHAT"] = "副本频道"
 L["STRING_INSTANCE_LIMIT"] = "最大窗口数量已经达到，你可以在选项面板修改这个限制。你也可以重新打开关闭的窗口 通过 (#) 窗口菜单。"
 L["STRING_INTERFACE_OPENOPTIONS"] = "打开选项面板"
+L["STRING_INVERT_RULE"] = "反转规则"
 L["STRING_ISA_PET"] = "这个角色是一个宠物"
 L["STRING_KEYBIND_BOOKMARK"] = "书签"
 L["STRING_KEYBIND_BOOKMARK_NUMBER"] = "书签#%s"
@@ -307,7 +309,7 @@ L["STRING_MAXIMUM"] = "最大"
 L["STRING_MAXIMUM_SHORT"] = "最大"
 L["STRING_MEDIA"] = "媒体"
 L["STRING_MELEE"] = "近战"
-L["STRING_MEMORY_ALERT_BUTTON"] = "我明白了"
+L["STRING_MEMORY_ALERT_BUTTON"] = "我知道了"
 L["STRING_MEMORY_ALERT_TEXT1"] = "Details!使用了大量的内存，但是|cFFFF8800与流行的认知相反|r，插件的内存占用|cFFFF8800不会影响|r任何游戏表现和FPS。"
 L["STRING_MEMORY_ALERT_TEXT2"] = "所以，如果你看到Details!使用大量内存，不要惊慌 :D！|cFFFF8800一切正常！|r，已使用内存的一部分也会|cFFFF8800用于生成缓存|r，使插件运行更加流畅。"
 L["STRING_MEMORY_ALERT_TEXT3"] = "但是，如果你想知道|cFFFF8800哪个插件占用较多内存|r或会导致游戏帧数降低，可以安装这个插件：“|cFFFFFF00AddOns Cpu Usage|r”。"
@@ -482,7 +484,7 @@ L["STRING_OPTIONS_BARSTART_DESC"] = [=[禁用时顶部纹理开始在图标的�
 使用带有透明区域的图标包时，这是非常有用的。]=]
 L["STRING_OPTIONS_BARUR_ANCHOR"] = "快速更新:"
 L["STRING_OPTIONS_BARUR_DESC"] = "当启用时，DPS和HPS值的更新只比平常快一点。"
-L["STRING_OPTIONS_BG_ALL_ALLY"] = "全部显示"
+L["STRING_OPTIONS_BG_ALL_ALLY"] = "战场表演敌人"
 L["STRING_OPTIONS_BG_ALL_ALLY_DESC"] = [=[启用时，在分组模式下敌对玩家的数据也会显示。
 cFFFFFF00注意|r：下次进入战斗时此改动才会生效。]=]
 L["STRING_OPTIONS_BG_ANCHOR"] = "战场："
@@ -562,19 +564,20 @@ L["STRING_OPTIONS_CMISC_DESC"] = [=[启用捕获：
 L["STRING_OPTIONS_COLORANDALPHA"] = "颜色和透明度"
 L["STRING_OPTIONS_COLORFIXED"] = "修正颜色"
 L["STRING_OPTIONS_COMBAT_ALPHA"] = "当"
-L["STRING_OPTIONS_COMBAT_ALPHA_1"] = "无"
 L["STRING_OPTIONS_COMBAT_ALPHA_2"] = "战斗中"
-L["STRING_OPTIONS_COMBAT_ALPHA_3"] = "脱离战斗"
-L["STRING_OPTIONS_COMBAT_ALPHA_4"] = "当退出队伍"
-L["STRING_OPTIONS_COMBAT_ALPHA_5"] = "当不在战斗中"
-L["STRING_OPTIONS_COMBAT_ALPHA_6"] = "当在战斗中"
+L["STRING_OPTIONS_COMBAT_ALPHA_3"] = "战斗外"
+L["STRING_OPTIONS_COMBAT_ALPHA_4"] = "不在队伍中"
+L["STRING_OPTIONS_COMBAT_ALPHA_5"] = "不在副本内"
+L["STRING_OPTIONS_COMBAT_ALPHA_6"] = "在副本内"
 L["STRING_OPTIONS_COMBAT_ALPHA_7"] = "团队副本测试"
-L["STRING_OPTIONS_COMBAT_ALPHA_DESC"] = [=[选择怎样的战斗影响窗口透明度。
+L["STRING_OPTIONS_COMBAT_ALPHA_8"] = "战场内"
+L["STRING_OPTIONS_COMBAT_ALPHA_9"] = "在史诗钥石地下城中"
+L["STRING_OPTIONS_COMBAT_ALPHA_DESC"] = [=[选择战斗状态如何影响窗口透明度。
 |cFFFFFF00没变化|r：不修改透明度。
-|cFFFFFF00当在战斗|r：当角色进入战斗时，所选的透明度将应用于窗口
-|cFFFFFF00脱离战斗|r：只要角色不在战斗中，就会应用alpha.
-|cFFFFFF00当退出队伍|r：当您不在队伍或团队中时，该窗口将采用所选的alpha.
-|cFFFFFF00重要|r：此选项会覆盖由“自动透明度”功能决定的Alpha.]=]
+|cFFFFFF00当在战斗|r：当角色进入战斗时，所选的Alpha将应用于窗口
+|cFFFFFF00脱离战斗|r：只要角色不在战斗中，就会应用此Alpha.
+|cFFFFFF00当退出队伍|r：当您不在队伍或团队中时，该窗口将采用所选的Alpha.
+|cFFFFFF00重要|r：此选项会覆盖由“自动透明度”功能设定的Alpha.]=]
 L["STRING_OPTIONS_COMBATTWEEKS"] = "战斗微调"
 L["STRING_OPTIONS_COMBATTWEEKS_DESC"] = "设定Details!如何调整一些战斗数据的细节。"
 L["STRING_OPTIONS_CONFIRM_ERASE"] = "要删除数据吗？"
@@ -1201,8 +1204,7 @@ L["STRING_OPTIONS_WC_ANCHOR"] = "快速窗口控制 (#%s):"
 L["STRING_OPTIONS_WC_BOOKMARK"] = "管理书签"
 L["STRING_OPTIONS_WC_BOOKMARK_DESC"] = "打开书签的配置面板。"
 L["STRING_OPTIONS_WC_CLOSE"] = "关闭"
-L["STRING_OPTIONS_WC_CLOSE_DESC"] = [=[关闭当前编辑窗口
-关闭时，窗口被视为非活动状态，可以使用“窗口控制”菜单随时重新打开
+L["STRING_OPTIONS_WC_CLOSE_DESC"] = [=[关闭当前编辑窗口。 关闭时，窗口被视为非活动状态，可以使用“窗口控制”菜单随时重新打开
 |cFFFFFF00重要:|r 要完全删除窗口，请转到其他部分]=]
 L["STRING_OPTIONS_WC_CREATE"] = "创建窗口"
 L["STRING_OPTIONS_WC_CREATE_DESC"] = "创建一个新的窗口。"
@@ -1267,10 +1269,12 @@ L["STRING_OPTIONSMENU_ROWTEXTS"] = "行：文本"
 L["STRING_OPTIONSMENU_SKIN"] = "皮肤选择"
 L["STRING_OPTIONSMENU_SPELLS"] = "法术定制"
 L["STRING_OPTIONSMENU_SPELLS_CONSOLIDATE"] = "合并拥有相同名称的普通法术"
+L["STRING_OPTIONSMENU_TITLEBAR"] = "标题列"
 L["STRING_OPTIONSMENU_TITLETEXT"] = "标题栏：文本"
 L["STRING_OPTIONSMENU_TOOLTIP"] = "提示"
 L["STRING_OPTIONSMENU_WALLPAPER"] = "壁纸"
 L["STRING_OPTIONSMENU_WINDOW"] = "窗口设置"
+L["STRING_OPTIONSMENU_WINDOWBODY"] = "视窗设定"
 L["STRING_OVERALL"] = "总体"
 L["STRING_OVERHEAL"] = "过量治疗"
 L["STRING_OVERHEALED"] = "过量治疗的"
@@ -1450,9 +1454,9 @@ L["STRING_VOIDZONE_TOOLTIP"] = "伤害和时间："
 L["STRING_WAITPLUGIN"] = [=[等待
 插件]=]
 L["STRING_WAVE"] = "波"
-L["STRING_WELCOME_1"] = [=[|cFFFFFFFF欢迎使用Details!快速安装向导
-|r本指南将帮助你一些重要的配置。
-您可以在任何时候跳过这只是点击“跳过”按钮。]=]
+L["STRING_WELCOME_1"] = [=[|cFFFFFFFF欢迎使用Details!快速安装向导|r
+本指南将帮你设置一些重要选项。
+可使用右下角的箭头翻页。]=]
 L["STRING_WELCOME_11"] = "如果你改变主意，你可以随时再通过选项面板中修改"
 L["STRING_WELCOME_12"] = "选择更新速度和动画。 此外，如果你的电脑有2GB或更少的内存RAM，它可能要减少和段的数量。"
 L["STRING_WELCOME_13"] = ""

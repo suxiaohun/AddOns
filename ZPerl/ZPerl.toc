@@ -1,4 +1,4 @@
-## Interface: 80300
+## Interface: 90002
 ## Version: 5.9.0
 ## Author: Resike
 ## Title: Z-Perl UnitFrames

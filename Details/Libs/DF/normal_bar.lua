@@ -22,12 +22,29 @@ do
 		WidgetType = "normal_bar",
 		SetHook = DF.SetHook,
 		RunHooksForWidget = DF.RunHooksForWidget,
+
+		dversion = DF.dversion,
 	}
 
-	_G [DF.GlobalWidgetControlNames ["normal_bar"]] = _G [DF.GlobalWidgetControlNames ["normal_bar"]] or metaPrototype
+	--check if there's a metaPrototype already existing
+	if (_G[DF.GlobalWidgetControlNames["normal_bar"]]) then
+		--get the already existing metaPrototype
+		local oldMetaPrototype = _G[DF.GlobalWidgetControlNames ["normal_bar"]]
+		--check if is older
+		if ( (not oldMetaPrototype.dversion) or (oldMetaPrototype.dversion < DF.dversion) ) then
+			--the version is older them the currently loading one
+			--copy the new values into the old metatable
+			for funcName, _ in pairs(metaPrototype) do
+				oldMetaPrototype[funcName] = metaPrototype[funcName]
+			end
+		end
+	else
+		--first time loading the framework
+		_G[DF.GlobalWidgetControlNames ["normal_bar"]] = metaPrototype
+	end
 end
 
-local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
+local BarMetaFunctions = _G[DF.GlobalWidgetControlNames ["normal_bar"]]
 
 ------------------------------------------------------------------------------------------------------------
 --> metatables
@@ -517,14 +534,14 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 			return
 		end
 	end
-	
+
 	local OnMouseDown = function (frame, button)
 		local capsule = frame.MyObject
 		local kill = capsule:RunHooksForWidget ("OnMouseDown", frame, button, capsule)
 		if (kill) then
 			return
 		end
-		
+
 		if (not frame.MyObject.container.isLocked and frame.MyObject.container:IsMovable()) then
 			if (not frame.isLocked and frame:IsMovable()) then
 				frame.MyObject.container.isMoving = true
@@ -532,14 +549,14 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 			end
 		end
 	end
-	
+
 	local OnMouseUp = function (frame, button)
 		local capsule = frame.MyObject
 		local kill = capsule:RunHooksForWidget ("OnMouseUp", frame, button, capsule)
 		if (kill) then
 			return
 		end
-		
+
 		if (frame.MyObject.container.isMoving) then
 			frame.MyObject.container:StopMovingOrSizing()
 			frame.MyObject.container.isMoving = false
@@ -548,14 +565,14 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 	
 ------------------------------------------------------------------------------------------------------------
 --> timer
-	
+
 	function BarMetaFunctions:OnTimerEnd()
 		local capsule = self
 		local kill = capsule:RunHooksForWidget ("OnTimerEnd", self.widget, capsule)
 		if (kill) then
 			return
 		end
-		
+
 		self.timer_texture:Hide()
 		self.timer_textureR:Hide()
 		self.div_timer:Hide()
@@ -563,7 +580,7 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 		self.timer = false
 	end
 
-	function BarMetaFunctions:CancelTimerBar (no_timer_end)
+	function BarMetaFunctions:CancelTimerBar(no_timer_end)
 		if (not self.HasTimer) then
 			return
 		end
@@ -575,7 +592,11 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 				self.statusbar:SetScript ("OnUpdate", nil)
 			end
 		end
+
 		self.righttext = ""
+		self.timer_texture:Hide()
+		self.timer_textureR:Hide()
+
 		if (not no_timer_end) then
 			self:OnTimerEnd()
 		end
@@ -584,6 +605,7 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 	local OnUpdate = function (self, elapsed)
 		--> percent of elapsed
 		local pct = abs (self.end_timer - GetTime() - self.tempo) / self.tempo
+
 		if (self.inverse) then
 			self.t:SetWidth (self.total_size * pct)
 		else
@@ -607,7 +629,6 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 	end
 	
 	function BarMetaFunctions:SetTimer (tempo, end_at)
-
 		if (end_at) then
 			self.statusbar.tempo = end_at - tempo
 			self.statusbar.remaining = end_at - GetTime()
@@ -620,13 +641,13 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 
 		self.statusbar.total_size = self.statusbar:GetWidth()
 		self.statusbar.inverse = self.BarIsInverse
-		
-		self (0)
-		
+
+		self(0)
+
 		self.div_timer:Show()
 		self.background:Show()
 		self:Show()
-		
+
 		if (self.LeftToRight) then
 			self.timer_texture:Hide()
 			self.timer_textureR:Show()
@@ -642,19 +663,19 @@ local BarMetaFunctions = _G [DF.GlobalWidgetControlNames ["normal_bar"]]
 			self.timer_texture:SetPoint ("left", self.statusbar, "left")
 			self.div_timer:SetPoint ("left", self.timer_texture, "right", -16, -1)
 		end
-		
+
 		if (self.BarIsInverse) then
 			self.statusbar.t:SetWidth (1)
 		else
 			self.statusbar.t:SetWidth (self.statusbar.total_size)
 		end
-		
+
 		self.timer = true
-		
+
 		self.HasTimer = true
 		self.TimerScheduled = DF:ScheduleTimer ("StartTimeBarAnimation", 0.1, self)
 	end
-	
+
 	function DF:StartTimeBarAnimation (timebar)
 		timebar.TimerScheduled = nil
 		timebar.statusbar:SetScript ("OnUpdate", OnUpdate)

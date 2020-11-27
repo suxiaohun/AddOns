@@ -84,6 +84,7 @@ L["STRING_CLICK_REPORT_LINE2"] = "|cFFFFCC22Shift+Clique|r: |cFFFFEE00modo janel
 L["STRING_CLOSEALL"] = "Todas as janelas estão fechadas, digite '/details show' para reabri-las."
 L["STRING_COLOR"] = "Cor"
 L["STRING_COMMAND_LIST"] = "lista de comandos"
+L["STRING_CONTEXT"] = "Contexto"
 L["STRING_COOLTIP_NOOPTIONS"] = "não há opções"
 L["STRING_CREATEAURA"] = "Criar Aura"
 L["STRING_CRITICAL_HITS"] = "Golpes Críticos"
@@ -261,8 +262,8 @@ L["STRING_GUILDDAMAGERANK_PLAYERBASE_PLAYER"] = "Jogador"
 L["STRING_GUILDDAMAGERANK_PLAYERBASE_RAID"] = "Todos os jogadores"
 L["STRING_GUILDDAMAGERANK_RAID"] = "Raid"
 L["STRING_GUILDDAMAGERANK_ROLE"] = "Função"
-L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "Mostrar histórico"
-L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "Mostrar ranking da guilda"
+L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "Histórico"
+L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "Ranking da guilda"
 L["STRING_GUILDDAMAGERANK_SYNCBUTTONTEXT"] = "Sincronizar com a guilda"
 L["STRING_GUILDDAMAGERANK_TUTORIAL_DESC"] = "Details! salva o dano e cura causados em cada encontro que você realizou com sua guilda. \\n\\nNavegue pelo histórico marcando a caixa '|cFFFFFF00Show History|r', os resultados para todos os combates serão exibidos.\\n Ao selecionar '|cFFFFFF00Show Guild Rank|r', as melhores pontuações para o chefão selecionado são mostradas. \\n\\nSe você está usando essa ferramenta pela primeira vez ou caso tenha perdido um dia de raide, clique no botão '|cFFFFFF00Sync With Guild|r'."
 L["STRING_GUILDDAMAGERANK_WINDOWALERT"] = "Chefe derrotado! Mostrar Ranking"
@@ -289,6 +290,7 @@ L["STRING_INFO_TUTORIAL_COMPARISON1"] = [=[Clique na aba |cFFFFDD00Comparar|r pa
 L["STRING_INSTANCE_CHAT"] = "Bate-papo da instância."
 L["STRING_INSTANCE_LIMIT"] = "o limite de janelas criadas foi atingido, você pode modificar este limite no painel de opções. Você também pode reabrir janelas fechadas anteriormente no menu da engrenagem."
 L["STRING_INTERFACE_OPENOPTIONS"] = "Abrir Painel de Opções"
+L["STRING_INVERT_RULE"] = "Regra de inversão"
 L["STRING_ISA_PET"] = "Este Ator é um Ajudante"
 L["STRING_KEYBIND_BOOKMARK"] = "Atalhos"
 L["STRING_KEYBIND_BOOKMARK_NUMBER"] = "Atalho #%s"
@@ -510,12 +512,12 @@ L["STRING_OPTIONS_BARSTART"] = "Barra inicia depois do ícone"
 L["STRING_OPTIONS_BARSTART_DESC"] = "Quando desabilitado, a textura superior inicia no ícone do lado esquerdo ao invés do direito (útil para ícones transparentes)."
 L["STRING_OPTIONS_BARUR_ANCHOR"] = "Atualização Dinâmica:"
 L["STRING_OPTIONS_BARUR_DESC"] = "Quando ativado, o Dano e Cura por segundo são atualizados com mais frequência do que o normal."
-L["STRING_OPTIONS_BG_ALL_ALLY"] = "Mostrar Todos"
+L["STRING_OPTIONS_BG_ALL_ALLY"] = "Mostrar inimigos do campo de batalha"
 L["STRING_OPTIONS_BG_ALL_ALLY_DESC"] = [=[Quando ativado, jogadores inimigos também são mostrados na janela mesmo ela estando no modo de Grupo.
 
 |cFFFFFF00Importante|r: alterações são aplicadas nos combates seguintes.]=]
 L["STRING_OPTIONS_BG_ANCHOR"] = "Campos de Batalha:"
-L["STRING_OPTIONS_BG_UNIQUE_SEGMENT"] = "Segmento Exclusivo"
+L["STRING_OPTIONS_BG_UNIQUE_SEGMENT"] = "Segmento Exclusivo Campo de Batalha"
 L["STRING_OPTIONS_BG_UNIQUE_SEGMENT_DESC"] = "Um segmento é criado no início do campo de batalha até o seu final."
 L["STRING_OPTIONS_CAURAS"] = "Coletar Auras"
 L["STRING_OPTIONS_CAURAS_DESC"] = [=[Ativa a Captura de:
@@ -599,13 +601,14 @@ L["STRING_OPTIONS_CMISC_DESC"] = [=[Ativa a Captura de:
 L["STRING_OPTIONS_COLORANDALPHA"] = "Cor & Transparência"
 L["STRING_OPTIONS_COLORFIXED"] = "Cor Fixada"
 L["STRING_OPTIONS_COMBAT_ALPHA"] = "Quando"
-L["STRING_OPTIONS_COMBAT_ALPHA_1"] = "Sem modificações"
 L["STRING_OPTIONS_COMBAT_ALPHA_2"] = "Durante o combate"
 L["STRING_OPTIONS_COMBAT_ALPHA_3"] = "Enquanto fora de combate"
 L["STRING_OPTIONS_COMBAT_ALPHA_4"] = "Enquanto fora de um grupo"
 L["STRING_OPTIONS_COMBAT_ALPHA_5"] = "Quando não Estiver Em Instância"
 L["STRING_OPTIONS_COMBAT_ALPHA_6"] = "Quando Estiver em Instância"
 L["STRING_OPTIONS_COMBAT_ALPHA_7"] = "Raid Debug"
+L["STRING_OPTIONS_COMBAT_ALPHA_8"] = "No Campo de batalha"
+L["STRING_OPTIONS_COMBAT_ALPHA_9"] = "Em mítico+"
 L["STRING_OPTIONS_COMBAT_ALPHA_DESC"] = [=[Seleciona a forma como o combate afeta a transparência da janela.
 
 |cFFFFFF00Nenhuma modificação|r: Não modifica o alpha.
@@ -732,7 +735,7 @@ L["STRING_OPTIONS_INSTANCE_DELETE_DESC"] = [=[Remove permanentemente uma janela.
 Seu jogo poderá recarregar durante o processo de limpeza.]=]
 L["STRING_OPTIONS_INSTANCE_SKIN"] = "Pele (skin)"
 L["STRING_OPTIONS_INSTANCE_SKIN_DESC"] = "Modifica todas as texturas e opções da janela através de um padrão pré-definido."
-L["STRING_OPTIONS_INSTANCE_STATUSBAR_ANCHOR"] = "Barra de Status:"
+L["STRING_OPTIONS_INSTANCE_STATUSBAR_ANCHOR"] = "Barra de Status"
 L["STRING_OPTIONS_INSTANCE_STATUSBARCOLOR"] = "Cor e transparência"
 L["STRING_OPTIONS_INSTANCE_STATUSBARCOLOR_DESC"] = [=[Seleciona a cor usada pela barra de status.
 
@@ -843,8 +846,8 @@ L["STRING_OPTIONS_OVERALL_DUNGEONCLEAN"] = "'Trash' de Masmorra"
 L["STRING_OPTIONS_OVERALL_DUNGEONCLEAN_DESC"] = "Segmentos de limpeza de 'trash mobs' em masmorras são adicionados aos dados globais."
 L["STRING_OPTIONS_OVERALL_LOGOFF"] = "Limpar ao Deslogar"
 L["STRING_OPTIONS_OVERALL_LOGOFF_DESC"] = "Quando ativado, os dados gerais de combate são automaticamente apagados quando seu personagem efetua logoff."
-L["STRING_OPTIONS_OVERALL_MYTHICPLUS"] = "Limpar ao Iniciar Dungeon Mítica+"
-L["STRING_OPTIONS_OVERALL_MYTHICPLUS_DESC"] = "Limpa os dados do overall quando iniciar uma dungeon mítica+."
+L["STRING_OPTIONS_OVERALL_MYTHICPLUS"] = "Limpar ao Iniciar Masmorra Mítica+"
+L["STRING_OPTIONS_OVERALL_MYTHICPLUS_DESC"] = "Limpa os dados do overall quando iniciar uma masmorra mítica+."
 L["STRING_OPTIONS_OVERALL_NEWBOSS"] = "Limpar em um novo chefe de raide"
 L["STRING_OPTIONS_OVERALL_NEWBOSS_DESC"] = "Quando habilitado, os dados gerais são limpos automaticamente quando enfrentando um novo chefe."
 L["STRING_OPTIONS_OVERALL_RAIDBOSS"] = "Chefes de raide"
@@ -1294,11 +1297,7 @@ L["STRING_OPTIONS_WC_ANCHOR"] = "Controle Rápido da Janela (#%s):"
 L["STRING_OPTIONS_WC_BOOKMARK"] = "Configurar Atalhos"
 L["STRING_OPTIONS_WC_BOOKMARK_DESC"] = "Abre o painel de configuração de atalhos."
 L["STRING_OPTIONS_WC_CLOSE"] = "Fechar"
-L["STRING_OPTIONS_WC_CLOSE_DESC"] = [=[Fecha esta janela.
-
-Quando fechada, a janela é considerada inativa e pode ser reaberta a qualquer momento através do botão de janelas #.
-
-Para deleta-la completamente, veja a sessão Diversos -> Apagar.]=]
+L["STRING_OPTIONS_WC_CLOSE_DESC"] = "Fecha esta janela. Quando fechada, a janela é considerada inativa e pode ser reaberta a qualquer momento através do Menu de controle de janela. Para remover completamente uma janela, vá para a seção 'Janela'."
 L["STRING_OPTIONS_WC_CREATE"] = "Criar Janela"
 L["STRING_OPTIONS_WC_CREATE_DESC"] = "Cria uma nova janela."
 L["STRING_OPTIONS_WC_LOCK"] = "Travar"
@@ -1368,10 +1367,12 @@ L["STRING_OPTIONSMENU_ROWTEXTS"] = "Barras: Textos"
 L["STRING_OPTIONSMENU_SKIN"] = "Seletor de Skin"
 L["STRING_OPTIONSMENU_SPELLS"] = "Customização de Magia"
 L["STRING_OPTIONSMENU_SPELLS_CONSOLIDATE"] = "Consolidar habilidades comuns com o mesmo nome"
+L["STRING_OPTIONSMENU_TITLEBAR"] = "Barra de titulo"
 L["STRING_OPTIONSMENU_TITLETEXT"] = "Barra de Título: Texto"
 L["STRING_OPTIONSMENU_TOOLTIP"] = "Tooltips"
 L["STRING_OPTIONSMENU_WALLPAPER"] = "Janela: Papel de Parede"
 L["STRING_OPTIONSMENU_WINDOW"] = "Janela: Configurações"
+L["STRING_OPTIONSMENU_WINDOWBODY"] = "Configurações de janela"
 L["STRING_OVERALL"] = "Dados Gerais"
 L["STRING_OVERHEAL"] = "Sobrecura"
 L["STRING_OVERHEALED"] = "Sobrecura"
@@ -1547,7 +1548,7 @@ L["STRING_TOTAL"] = "Total"
 L["STRING_TRANSLATE_LANGUAGE"] = "Ajude a traduzir o Details!"
 L["STRING_TUTORIAL_FULLY_DELETE_WINDOW"] = [=[Você fechou uma janela e pode reabri-la quando quiser.
 Para deleta-la por completo, vá nas opções -> Janela: Geral -> Deletar.]=]
-L["STRING_TUTORIAL_OVERALL1"] = "ajuste o overall no painel de opções > PvE/PvP."
+L["STRING_TUTORIAL_OVERALL1"] = "A Data Overall atualiza apenas após o combate, clique com o botão direito na barra de título e escolha 'Dynamic Overall Damage' se você desejar atualizações regulares. "
 L["STRING_UNKNOW"] = "Desconhecido"
 L["STRING_UNKNOWSPELL"] = "Magia Desconhecida"
 L["STRING_UNLOCK"] = [=[Separe as janelas
@@ -1652,7 +1653,4 @@ L["STRING_WIPE_ERROR1"] = "um wipe já foi chamado."
 L["STRING_WIPE_ERROR2"] = "não estamos em um chefe de raide."
 L["STRING_WIPE_ERROR3"] = "não foi possível finalizar o encontro."
 L["STRING_YES"] = "Sim"
-
-
-
 

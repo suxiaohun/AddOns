@@ -1,4 +1,4 @@
-## Interface: 11302
+## Interface: 90002
 ## Title: CombatInfo
 ## Notes: this is my first addon.
 

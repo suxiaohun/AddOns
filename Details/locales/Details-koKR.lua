@@ -84,6 +84,7 @@ L["STRING_CLICK_REPORT_LINE2"] = "|cFFFFCC22Shift+클릭|r: |cFFFFEE00창 모드
 L["STRING_CLOSEALL"] = "모든 창이 닫혔습니다, 다시 열려면 '/details show'를 입력하세요."
 L["STRING_COLOR"] = "색상"
 L["STRING_COMMAND_LIST"] = "명령어 목록"
+L["STRING_CONTEXT"] = "상황 정보"
 L["STRING_COOLTIP_NOOPTIONS"] = "옵션 없음"
 L["STRING_CREATEAURA"] = "오라 만들기"
 L["STRING_CRITICAL_HITS"] = "치명타 및 극대화 적중"
@@ -261,8 +262,8 @@ L["STRING_GUILDDAMAGERANK_PLAYERBASE_PLAYER"] = "플레이어"
 L["STRING_GUILDDAMAGERANK_PLAYERBASE_RAID"] = "모든 플레이어"
 L["STRING_GUILDDAMAGERANK_RAID"] = "공격대"
 L["STRING_GUILDDAMAGERANK_ROLE"] = "역할"
-L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "기록 표시"
-L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "길드 순위 표시"
+L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "기록"
+L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "길드 순위"
 L["STRING_GUILDDAMAGERANK_SYNCBUTTONTEXT"] = "길드와 동기화"
 L["STRING_GUILDDAMAGERANK_TUTORIAL_DESC"] = "Details!가 길드로 진행한 각 우두머리 전투의 피해량과 치유량을 저장합니다.\\n\\n'|cFFFFFF00기록 표시|r'를 선택하여 기록을 탐색하세요, 모든 전투 결과가 표시됩니다.\\n '|cFFFFFF00길드 순위 표시|r'를 선택하면 선택한 우두머리의 상위 점수가 표시됩니다.\\n\\n이 도구를 처음 사용하거나 공격대 진행에 참여하지 않았다면  '|cFFFFFF00길드와 동기화|r' 버튼을 클릭하세요."
 L["STRING_GUILDDAMAGERANK_WINDOWALERT"] = "우두머리 처치! 순위 표시"
@@ -288,6 +289,7 @@ L["STRING_INFO_TUTORIAL_COMPARISON1"] = "|cFFFFDD00비교|r 탭을 클릭하면 
 L["STRING_INSTANCE_CHAT"] = "인스턴스 대화"
 L["STRING_INSTANCE_LIMIT"] = "최대 창 갯수에 도달했습니다, 옵션 창에서 이 제한 갯수를 변경할 수 있습니다. 또한 창 메뉴에서 닫혀진 창(#)을 다시 열 수 있습니다."
 L["STRING_INTERFACE_OPENOPTIONS"] = "옵션 창 열기"
+L["STRING_INVERT_RULE"] = "반전 규칙"
 L["STRING_ISA_PET"] = "소환수에 의한 행동"
 L["STRING_KEYBIND_BOOKMARK"] = "북마크"
 L["STRING_KEYBIND_BOOKMARK_NUMBER"] = "북마크 #%s"
@@ -507,7 +509,7 @@ L["STRING_OPTIONS_BARSTART_DESC"] = [=[비활성하면 상위 무늬를 아이�
 투명 영역이 있는 아이콘 묶음을 사용할 때 유용합니다.]=]
 L["STRING_OPTIONS_BARUR_ANCHOR"] = "빠른 갱신:"
 L["STRING_OPTIONS_BARUR_DESC"] = "사용하면, DPS와 HPS 값이 보통보다 조금 더 빠르게 갱신 됩니다."
-L["STRING_OPTIONS_BG_ALL_ALLY"] = "모두 표시"
+L["STRING_OPTIONS_BG_ALL_ALLY"] = "전장 쇼 적"
 L["STRING_OPTIONS_BG_ALL_ALLY_DESC"] = [=[활성화하면 창이 그룹 모드일 경우 적 플레이어도 보여집니다.
 
 |cFFFFFF00중요|r: 다음 전투부터 적용됩니다.]=]
@@ -595,13 +597,14 @@ L["STRING_OPTIONS_CMISC_DESC"] = [=[수집 허용:
 L["STRING_OPTIONS_COLORANDALPHA"] = "색상 & 투명도"
 L["STRING_OPTIONS_COLORFIXED"] = "색상 고정"
 L["STRING_OPTIONS_COMBAT_ALPHA"] = "시기"
-L["STRING_OPTIONS_COMBAT_ALPHA_1"] = "숨기지 않음"
 L["STRING_OPTIONS_COMBAT_ALPHA_2"] = "전투 중일 때"
 L["STRING_OPTIONS_COMBAT_ALPHA_3"] = "전투 중이 아닐 때"
 L["STRING_OPTIONS_COMBAT_ALPHA_4"] = "파티가 아닐 때"
 L["STRING_OPTIONS_COMBAT_ALPHA_5"] = "인스턴스 밖에 있을 때"
 L["STRING_OPTIONS_COMBAT_ALPHA_6"] = "인스턴스 안에 있을 때"
 L["STRING_OPTIONS_COMBAT_ALPHA_7"] = "공격대 디버그"
+L["STRING_OPTIONS_COMBAT_ALPHA_8"] = "전장"
+L["STRING_OPTIONS_COMBAT_ALPHA_9"] = "신화+"
 L["STRING_OPTIONS_COMBAT_ALPHA_DESC"] = [=[전투 상태가 창 투명도를 어떻게 변경할 지 선택하세요.
 
 |cFFFFFF00변경 없음|r: 투명도를 변경하지 않습니다.
@@ -1301,11 +1304,7 @@ L["STRING_OPTIONS_WC_ANCHOR"] = "빠른 창 제어 (#%s):"
 L["STRING_OPTIONS_WC_BOOKMARK"] = "북마크 관리"
 L["STRING_OPTIONS_WC_BOOKMARK_DESC"] = "북마크 설정 창을 엽니다."
 L["STRING_OPTIONS_WC_CLOSE"] = "닫기"
-L["STRING_OPTIONS_WC_CLOSE_DESC"] = [=[현재 편집 중인 창을 닫습니다.
-
-닫혀 있을 때 창은 비활성 상태가 되며 언제든지 창 제어 메뉴를 통해 다시 열 수 있습니다.
-
-|cFFFFFF00중요:|r 창을 완전히 제거하려면 "창: 일반" 항목으로 가세요.]=]
+L["STRING_OPTIONS_WC_CLOSE_DESC"] = "현재 편집 중인 창을 닫습니다. 닫혀 있을 때 창은 비활성 상태가 되며 언제든지 창 제어 메뉴를 통해 다시 열 수 있습니다. |cFFFFFF00중요:|r 창을 완전히 제거하려면 \"창: 일반\" 항목으로 가세요."
 L["STRING_OPTIONS_WC_CREATE"] = "창 생성"
 L["STRING_OPTIONS_WC_CREATE_DESC"] = "새 창을 만듭니다."
 L["STRING_OPTIONS_WC_LOCK"] = "잠금"
@@ -1379,10 +1378,12 @@ L["STRING_OPTIONSMENU_ROWTEXTS"] = "바: 문자"
 L["STRING_OPTIONSMENU_SKIN"] = "스킨 선택"
 L["STRING_OPTIONSMENU_SPELLS"] = "주문 사용자 설정"
 L["STRING_OPTIONSMENU_SPELLS_CONSOLIDATE"] = "같은 이름의 공통 주문 통합"
+L["STRING_OPTIONSMENU_TITLEBAR"] = "제목 표시 줄"
 L["STRING_OPTIONSMENU_TITLETEXT"] = "제목 바: 문자"
 L["STRING_OPTIONSMENU_TOOLTIP"] = "툴팁"
 L["STRING_OPTIONSMENU_WALLPAPER"] = "창: 배경화면"
 L["STRING_OPTIONSMENU_WINDOW"] = "창: 일반"
+L["STRING_OPTIONSMENU_WINDOWBODY"] = "창 설정"
 L["STRING_OVERALL"] = "종합"
 L["STRING_OVERHEAL"] = "초과 치유"
 L["STRING_OVERHEALED"] = "초과 치유됨"
@@ -1555,7 +1556,7 @@ L["STRING_TOTAL"] = "총량"
 L["STRING_TRANSLATE_LANGUAGE"] = "Details의 번역을 도와주세요!"
 L["STRING_TUTORIAL_FULLY_DELETE_WINDOW"] = [=[창을 닫았지만 언제든 다시 열수 있습니다.
 창을 완전히 삭제하려면 옵션 -> 창: 일반 -> 삭제 항목을 찾아보세요.]=]
-L["STRING_TUTORIAL_OVERALL1"] = "옵션 창 > PvE/PvP에서 종합 데이터 설정"
+L["STRING_TUTORIAL_OVERALL1"] = "전체 데이터는 전투가 완료되었을 때만 업데이트되며, 정기적으로 업데이트하려면 제목 표시줄을 마우스 오른쪽 단추로 클릭하고 '전체 데이터 동적'을 선택하십시오."
 L["STRING_UNKNOW"] = "알 수 없음"
 L["STRING_UNKNOWSPELL"] = "알 수 없는 주문"
 L["STRING_UNLOCK"] = [=[이 버튼으로

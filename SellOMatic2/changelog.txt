@@ -1,7 +1,0 @@
-**a068:**
-
-* Fixed issue with locale in Destroy module.
-* Updated TOC to latest patch.
-
-----
-

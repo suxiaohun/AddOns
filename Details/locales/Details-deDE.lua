@@ -84,6 +84,7 @@ L["STRING_CLICK_REPORT_LINE2"] = "|cFFFFCC22Shift+Click|r: |cFFFFEE00Fenstermodu
 L["STRING_CLOSEALL"] = "Alle Details!-Fenster sind geschlossen, schreibe '/details show', um sie wieder zu öffnen."
 L["STRING_COLOR"] = "Farbe"
 L["STRING_COMMAND_LIST"] = "Befehlsliste"
+L["STRING_CONTEXT"] = "Zusammenhang"
 L["STRING_COOLTIP_NOOPTIONS"] = "Keine Optionen"
 L["STRING_CREATEAURA"] = "Aura erstellen"
 L["STRING_CRITICAL_HITS"] = "Kritische Treffer"
@@ -262,8 +263,8 @@ L["STRING_GUILDDAMAGERANK_PLAYERBASE_PLAYER"] = "Spieler"
 L["STRING_GUILDDAMAGERANK_PLAYERBASE_RAID"] = "Alle Spieler"
 L["STRING_GUILDDAMAGERANK_RAID"] = "Schlachtzug"
 L["STRING_GUILDDAMAGERANK_ROLE"] = "Rolle"
-L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "Verlauf zeigen"
-L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "Gildenbank zeigen"
+L["STRING_GUILDDAMAGERANK_SHOWHISTORY"] = "Verlauf"
+L["STRING_GUILDDAMAGERANK_SHOWRANK"] = "Gildenrang"
 L["STRING_GUILDDAMAGERANK_SYNCBUTTONTEXT"] = "Mit Gilde synchronisieren"
 L["STRING_GUILDDAMAGERANK_TUTORIAL_DESC"] = "Details! speichert den Schaden und die Heilung für jeden Boss, den du mit deiner Gilde triffst. Durchsuche den Verlauf, indem du das Kästchen'|cFFFFFF00Zeige Gerschichte|r' anklickst. Die Ergebnisse für alle Kämpfe werden angezeigt.\\n Durch Auswahl von '|cFFFFFF00Zeige Gilden Rang|r' werden die Top-Ergebnisse für den ausgewählten Boss angezeigt.\\n\\n\\nWenn Sie dieses Tool zum ersten Mal verwenden oder wenn Sie einen Tag des Schlachtzuges verloren haben, klicken Sie auf die Schaltfläche '|cFFFFFFFFFF00Synchroniesiere mit Gilde|r'."
 L["STRING_GUILDDAMAGERANK_WINDOWALERT"] = "Boss besiegt! Rangliste zeigen"
@@ -289,6 +290,7 @@ L["STRING_INFO_TUTORIAL_COMPARISON1"] = "Klicke auf den |cFFFFDD00Vergleichen|r-
 L["STRING_INSTANCE_CHAT"] = "Instanzchat"
 L["STRING_INSTANCE_LIMIT"] = "Maximale Fensteranzahl erreicht. Dieses Limit kann in den Optionen geändert werden. Geschlossene Fenster können via (#) Fenstermenü wieder angezeigt werden."
 L["STRING_INTERFACE_OPENOPTIONS"] = "Konfigurationsmenü öffnen"
+L["STRING_INVERT_RULE"] = "Regel umkehren"
 L["STRING_ISA_PET"] = "Dies ist ein Begleiter"
 L["STRING_KEYBIND_BOOKMARK"] = "Lesezeichen"
 L["STRING_KEYBIND_BOOKMARK_NUMBER"] = "Lesezeichen #%s"
@@ -505,7 +507,7 @@ L["STRING_OPTIONS_BARSTART_DESC"] = [=[Deaktiviert: Die oberste Textur beginnt a
 Sinnvoll bei Symbolen mit transparenten Rändern.]=]
 L["STRING_OPTIONS_BARUR_ANCHOR"] = "Schnelle Aktualisierung"
 L["STRING_OPTIONS_BARUR_DESC"] = "Aktiviert: DPS/HPS-Werte werden etwas häufiger aktualisiert als üblich."
-L["STRING_OPTIONS_BG_ALL_ALLY"] = "Alle zeigen"
+L["STRING_OPTIONS_BG_ALL_ALLY"] = "Schlachtfeld Zeige die Feinde"
 L["STRING_OPTIONS_BG_ALL_ALLY_DESC"] = [=[Aktiviert: Zeigt auch gegnerische Spieler, wenn das Fenster gruppiert ist.
 
 |cFFFFFF00Wichtig|r: Änderungen werden erst beim nächsten Kampf übernommen.]=]
@@ -593,13 +595,14 @@ L["STRING_OPTIONS_CMISC_DESC"] = [=[Aktiviert die Erfassung von:
 L["STRING_OPTIONS_COLORANDALPHA"] = "Farbe & Transparenz"
 L["STRING_OPTIONS_COLORFIXED"] = "Festgelegte Farbe"
 L["STRING_OPTIONS_COMBAT_ALPHA"] = "Wann?"
-L["STRING_OPTIONS_COMBAT_ALPHA_1"] = "Niemals"
 L["STRING_OPTIONS_COMBAT_ALPHA_2"] = "Innerhalb eines Kampfes"
 L["STRING_OPTIONS_COMBAT_ALPHA_3"] = "Außerhalb eines Kampfes"
 L["STRING_OPTIONS_COMBAT_ALPHA_4"] = "Außerhalb einer Gruppe"
 L["STRING_OPTIONS_COMBAT_ALPHA_5"] = "Außerhalb einer Instanz"
 L["STRING_OPTIONS_COMBAT_ALPHA_6"] = "Innerhalb einer Instanz"
 L["STRING_OPTIONS_COMBAT_ALPHA_7"] = "Fehler beseitgen im Schlachtzug"
+L["STRING_OPTIONS_COMBAT_ALPHA_8"] = "auf dem Schlachtfeld"
+L["STRING_OPTIONS_COMBAT_ALPHA_9"] = "In Mythisch+"
 L["STRING_OPTIONS_COMBAT_ALPHA_DESC"] = [=[Wähle, wie ein Kampf die Fenstertransparenz beeinflussen soll.
 
 |cFFFFFF00Keine Änderung|r: Transparenz unverändert.
@@ -1144,10 +1147,8 @@ L["STRING_OPTIONS_TEXT_LOUTILINE"] = "Textschatten"
 L["STRING_OPTIONS_TEXT_LOUTILINE_DESC"] = "Aktiviert oder deaktiviert den Umriss des linken Textes."
 L["STRING_OPTIONS_TEXT_LPOSITION"] = "Nummer zeigen"
 L["STRING_OPTIONS_TEXT_LPOSITION_DESC"] = "Zeigt die Positionsnummer eines Spielers links vom Namen."
---[[Translation missing --]]
---[[ L["STRING_OPTIONS_TEXT_LTRANSLIT"] = ""--]] 
---[[Translation missing --]]
---[[ L["STRING_OPTIONS_TEXT_LTRANSLIT_DESC"] = ""--]] 
+L["STRING_OPTIONS_TEXT_LTRANSLIT"] = "Transliterieren"
+L["STRING_OPTIONS_TEXT_LTRANSLIT_DESC"] = "Stellt die russischen Buchstaben, die niemand versteht, in westliche Buchstaben da."
 L["STRING_OPTIONS_TEXT_RIGHT_ANCHOR"] = "Rechter Text:"
 L["STRING_OPTIONS_TEXT_ROUTILINE_DESC"] = "Aktiviert oder deaktiviert den Umriss des rechten Textes."
 L["STRING_OPTIONS_TEXT_ROWICONS_ANCHOR"] = "Symbole:"
@@ -1297,11 +1298,7 @@ L["STRING_OPTIONS_WC_ANCHOR"] = "Schnelle Fensterkontrolle (#%s):"
 L["STRING_OPTIONS_WC_BOOKMARK"] = "Lesezeichen verwalten"
 L["STRING_OPTIONS_WC_BOOKMARK_DESC"] = "Öffnet das Lesezeichenmenü."
 L["STRING_OPTIONS_WC_CLOSE"] = "Schließen"
-L["STRING_OPTIONS_WC_CLOSE_DESC"] = [=[Schließt das gerade editierte Fenster.
-
-Geschlossen ist das Fenster inaktiv und kann wieder im Fensterkontrollmenü geöffnet werden.
-
-|cFFFFFF00Achtung:|r zum endgültigen Löschen eines Fensters gehe zu 'Fenster: Allgemein'.]=]
+L["STRING_OPTIONS_WC_CLOSE_DESC"] = "Schließt das gerade editierte Fenster. Geschlossen ist das Fenster inaktiv und kann wieder im Fensterkontrollmenü geöffnet werden. |cFFFFFF00Achtung:|r zum endgültigen Löschen eines Fensters gehe zu 'Fenster: Allgemein'."
 L["STRING_OPTIONS_WC_CREATE"] = "Fenster erstellen"
 L["STRING_OPTIONS_WC_CREATE_DESC"] = "Erstellt ein neues Fenster."
 L["STRING_OPTIONS_WC_LOCK"] = "Fixieren"
@@ -1375,10 +1372,12 @@ L["STRING_OPTIONSMENU_ROWTEXTS"] = "Balken: Texte"
 L["STRING_OPTIONSMENU_SKIN"] = "Skinauswahl"
 L["STRING_OPTIONSMENU_SPELLS"] = "Benutzerdefinierte Zauber"
 L["STRING_OPTIONSMENU_SPELLS_CONSOLIDATE"] = "Gleichnamige Zauber zusammenfassen"
+L["STRING_OPTIONSMENU_TITLEBAR"] = "Titelleiste"
 L["STRING_OPTIONSMENU_TITLETEXT"] = "Titelleiste: Text"
 L["STRING_OPTIONSMENU_TOOLTIP"] = "Tooltips"
 L["STRING_OPTIONSMENU_WALLPAPER"] = "Fenster: Hintergrund"
 L["STRING_OPTIONSMENU_WINDOW"] = "Fenster: Allgemein"
+L["STRING_OPTIONSMENU_WINDOWBODY"] = "Fenster-Körper"
 L["STRING_OVERALL"] = "Gesamt"
 L["STRING_OVERHEAL"] = "Überheilung"
 L["STRING_OVERHEALED"] = "überheilt"
@@ -1552,7 +1551,7 @@ L["STRING_TOTAL"] = "Gesamt"
 L["STRING_TRANSLATE_LANGUAGE"] = "Hilf mit bei der Details!-Übersetzung"
 L["STRING_TUTORIAL_FULLY_DELETE_WINDOW"] = [=[Du hast ein Fenster geschlossen, du kannst es jederzeit erneut öffnen.
 Um ein Fenster komplett zu löschen, gehe zu den Optionen  -> Fenster: Allgemein -> Löschen.]=]
-L["STRING_TUTORIAL_OVERALL1"] = "Anpassen der Gesamteinstellungen auf dem Optionsmenü > PvE/PvP"
+L["STRING_TUTORIAL_OVERALL1"] = "Gesamtdaten werden nur aktualisiert, wenn der Kampf beendet ist. Wenn du regelmäßige Aktualisierungen wünschst, klicke mit der rechten Maustaste auf die Titelleiste und wähle \"Dynamische Gesamtdaten\"."
 L["STRING_UNKNOW"] = "Unbekannt"
 L["STRING_UNKNOWSPELL"] = "Unbekannter Zauber"
 L["STRING_UNLOCK"] = [=[Fenstergruppe auflösen
