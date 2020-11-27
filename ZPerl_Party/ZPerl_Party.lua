@@ -17,6 +17,8 @@ end, "$Revision:  $")
 
 local percD = "%d"..PERCENT_SYMBOL
 
+local IsClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
 local format = format
 
 local UnitHealth = UnitHealth
@@ -59,7 +61,7 @@ function XPerl_Party_Events_OnLoad(self)
 		"UNIT_ABSORB_AMOUNT_CHANGED",
 		"UNIT_POWER_FREQUENT",
 		"UNIT_MAXPOWER",
-		"UNIT_HEALTH_FREQUENT",
+		IsClassic and "UNIT_HEALTH_FREQUENT" or "UNIT_HEALTH",
 		"UNIT_MAXHEALTH",
 		"UNIT_LEVEL",
 		"UNIT_DISPLAYPOWER",
@@ -72,6 +74,7 @@ function XPerl_Party_Events_OnLoad(self)
 		"PARTY_LOOT_METHOD_CHANGED",
 		--"PET_BATTLE_OPENING_START",
 		--"PET_BATTLE_CLOSE",
+		"INCOMING_RESURRECT_CHANGED",
 	}
 	for i, event in pairs(events) do
 		if pcall(self.RegisterEvent, self, event) then
@@ -291,10 +294,44 @@ local function ShowHideValues(self)
 	end
 end
 
+-- XPerl_Party_UpdateHealPrediction
+local function XPerl_Party_UpdateHealPrediction(self)
+	if pconf.healprediction then
+		XPerl_SetExpectedHealth(self)
+	else
+		self.statsFrame.expectedHealth:Hide()
+	end
+end
+
+-- XPerl_Party_UpdateAbsorbPrediction
+local function XPerl_Party_UpdateAbsorbPrediction(self)
+	if pconf.absorbs then
+		XPerl_SetExpectedAbsorbs(self)
+	else
+		self.statsFrame.expectedAbsorbs:Hide()
+	end
+end
+
+local function XPerl_Party_UpdateResurrectionStatus(self)
+	if (UnitHasIncomingResurrection(self.partyid)) then
+		if pconf.portrait then
+			self.portraitFrame.resurrect:Show()
+		else
+			self.statsFrame.resurrect:Show()
+		end
+	else
+		if pconf.portrait then
+			self.portraitFrame.resurrect:Hide()
+		else
+			self.statsFrame.resurrect:Hide()
+		end
+	end
+end
+
 local spiritOfRedemption = GetSpellInfo(27827)
 
 -- XPerl_Party_UpdateHealth
-function XPerl_Party_UpdateHealth(self)
+local function XPerl_Party_UpdateHealth(self)
 	if (not self.conf) then
 		return
 	end
@@ -310,6 +347,7 @@ function XPerl_Party_UpdateHealth(self)
 
 	XPerl_Party_UpdateAbsorbPrediction(self)
 	XPerl_Party_UpdateHealPrediction(self)
+	XPerl_Party_UpdateResurrectionStatus(self)
 
 	if (not UnitIsConnected(partyid)) then
 		reason = XPERL_LOC_OFFLINE
@@ -353,24 +391,6 @@ function XPerl_Party_UpdateHealth(self)
 			self.statsFrame.greyMana = nil
 			XPerl_SetManaBarType(self)
 		end
-	end
-end
-
--- XPerl_Party_UpdateHealPrediction
-function XPerl_Party_UpdateHealPrediction(self)
-	if pconf.healprediction then
-		XPerl_SetExpectedHealth(self)
-	else
-		self.statsFrame.expectedHealth:Hide()
-	end
-end
-
--- XPerl_Party_UpdateAbsorbPrediction
-function XPerl_Party_UpdateAbsorbPrediction(self)
-	if pconf.absorbs then
-		XPerl_SetExpectedAbsorbs(self)
-	else
-		self.statsFrame.expectedAbsorbs:Hide()
 	end
 end
 
@@ -605,7 +625,7 @@ local function UpdateAssignedRoles(self)
 	local icon = self.nameFrame.roleIcon
 	local isTank, isHealer, isDamage
 	local inInstance, instanceType = IsInInstance()
-	if (WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and instanceType == "party") then
+	if not IsClassic and instanceType == "party" then
 		-- No point getting it otherwise, as they can be wrong. Usually the values you had
 		-- from previous instance if you're running more than one with the same people
 
@@ -676,9 +696,9 @@ end
 -- UpdatePhaseIndicators
 local function UpdatePhasingDisplays(self)
 	local unit = self.partyid
-	local inPhase = UnitInPhase(unit)
+	local inPhase = not IsClassic and UnitPhaseReason(unit)
 
-	if ( inPhase or not UnitExists(unit) or not UnitIsConnected(unit)) then
+	if ( not inPhase or not UnitExists(unit) or not UnitIsConnected(unit)) then
 		self.phasingIcon:Hide()
 	else
 		self.phasingIcon:Show()
@@ -721,7 +741,7 @@ local function XPerl_Party_UpdatePVP(self)
 	elseif pconf.pvpIcon and factionGroup and factionGroup ~= "Neutral" and UnitIsPVP(partyid) then
 		pvpIcon:SetTexture("Interface\\TargetingFrame\\UI-PVP-"..factionGroup)
 
-		if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and UnitIsMercenary(partyid) then
+		if not IsClassic and UnitIsMercenary(partyid) then
 			if factionGroup == "Horde" then
 				pvpIcon:SetTexture("Interface\\TargetingFrame\\UI-PVP-Alliance")
 			elseif factionGroup == "Alliance" then
@@ -837,7 +857,7 @@ end
 local function XPerl_Party_UpdateRange(self, overrideUnit)
 	local partyid = overrideUnit or self.partyid
 	if (partyid) then
-		if (not pconf.range30yard or CheckInteractDistance(partyid, 1) or not UnitIsConnected(partyid)) then
+		if (not pconf.range30yard or CheckInteractDistance(partyid, 4) or not UnitIsConnected(partyid)) then
 			self.nameFrame.rangeIcon:Hide()
 		else
 			self.nameFrame.rangeIcon:Show()
@@ -882,7 +902,7 @@ local function CheckRaid()
 		local singleGroup = XPerl_Party_SingleGroup()
 
 		if (not pconf or ((pconf.inRaid and IsInRaid()) or (pconf.smallRaid and singleGroup) or (GetNumGroupMembers() > 0 and not IsInRaid()))) then -- or GetNumGroupMembers() > 0
-			if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+			if not IsClassic then
 				if not C_PetBattles.IsInBattle() then
 					if (not partyHeader:IsShown()) then
 						partyHeader:Show()
@@ -905,12 +925,30 @@ local function CheckRaid()
 	end
 end
 
+-- XPerl_Party_TargetUpdateHealPrediction
+local function XPerl_Party_TargetUpdateHealPrediction(self)
+	if pconf.healprediction then
+		XPerl_SetExpectedHealth(self)
+	else
+		self.expectedHealth:Hide()
+	end
+end
+
+-- XPerl_Party_TargetUpdateAbsorbPrediction
+local function XPerl_Party_TargetUpdateAbsorbPrediction(self)
+	if pconf.absorbs then
+		XPerl_SetExpectedAbsorbs(self)
+	else
+		self.expectedAbsorbs:Hide()
+	end
+end
+
 -- XPerl_Party_TargetUpdateHealth
 local function XPerl_Party_TargetUpdateHealth(self)
 	local tf = self.targetFrame
 	local targetid = self.targetid
-	local hp, hpMax, heal, abosrb = UnitIsGhost(targetid) and 1 or (UnitIsDead(targetid) and 0 or UnitHealth(targetid)), UnitHealthMax(targetid), WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and UnitGetIncomingHeals(targetid), WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and UnitGetTotalAbsorbs(targetid)
-	tf.lastHP, tf.lastHPMax, tf.lastHeal, tf.lastAbsorb = hp, hpMax, heal, abosrb
+	local hp, hpMax, heal, absorb = UnitIsGhost(targetid) and 1 or (UnitIsDead(targetid) and 0 or UnitHealth(targetid)), UnitHealthMax(targetid), not IsClassic and UnitGetIncomingHeals(targetid), not IsClassic and UnitGetTotalAbsorbs(targetid)
+	tf.lastHP, tf.lastHPMax, tf.lastHeal, tf.lastAbsorb = hp, hpMax, heal, absorb
 	tf.lastUpdate = GetTime()
 
 	--tf.healthBar:SetMinMaxValues(0, hpMax)
@@ -970,24 +1008,6 @@ local function XPerl_Party_TargetUpdateHealth(self)
 	end
 end
 
--- XPerl_Party_TargetUpdateHealPrediction
-function XPerl_Party_TargetUpdateHealPrediction(self)
-	if pconf.healprediction then
-		XPerl_SetExpectedHealth(self)
-	else
-		self.expectedHealth:Hide()
-	end
-end
-
--- XPerl_Party_TargetUpdateAbsorbPrediction
-function XPerl_Party_TargetUpdateAbsorbPrediction(self)
-	if pconf.absorbs then
-		XPerl_SetExpectedAbsorbs(self)
-	else
-		self.expectedAbsorbs:Hide()
-	end
-end
-
 -- XPerl_Party_TargetRaidIcon
 local function XPerl_Party_TargetRaidIcon(self)
 	local partyid = self.partyid
@@ -1040,7 +1060,7 @@ function XPerl_Party_OnUpdate(self, elapsed)
 		end
 
 		if (pconf.target.large and self.targetFrame:IsShown()) then
-			local hp, hpMax, heal, absorb = UnitIsGhost(targetid) and 1 or (UnitIsDead(targetid) and 0 or UnitHealth(targetid)), UnitHealthMax(targetid), WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and UnitGetIncomingHeals(targetid), WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and UnitGetTotalAbsorbs(targetid)
+			local hp, hpMax, heal, absorb = UnitIsGhost(targetid) and 1 or (UnitIsDead(targetid) and 0 or UnitHealth(targetid)), UnitHealthMax(targetid), not IsClassic and UnitGetIncomingHeals(targetid), not IsClassic and UnitGetTotalAbsorbs(targetid)
 			if (hp ~= self.targetFrame.lastHP or hpMax ~= self.targetFrame.lastHPMax or heal ~= self.targetFrame.lastHeal or absorb ~= self.targetFrame.lastAbsorb or GetTime() > self.targetFrame.lastUpdate + 5000) then
 				XPerl_Party_TargetUpdateHealth(self)
 			end
@@ -1238,6 +1258,11 @@ function XPerl_Party_Events:UNIT_HEALTH_FREQUENT()
 	XPerl_Party_UpdateHealth(self)
 end
 
+-- UNIT_HEALTH
+function XPerl_Party_Events:UNIT_HEALTH()
+	XPerl_Party_UpdateHealth(self)
+end
+
 -- UNIT_CONNECTION
 function XPerl_Party_Events:UNIT_CONNECTION(unit, online)
 	if (unit == self.partyid) then
@@ -1362,6 +1387,14 @@ function XPerl_Party_Events:PLAYER_FLAGS_CHANGED(unit)
 		XPerl_Party_UpdatePlayerFlags(f)
 	end
 end
+
+function XPerl_Party_Events:INCOMING_RESURRECT_CHANGED(unit)
+	local f = PartyFrames[unit]
+	if (f) then
+		XPerl_Party_UpdateResurrectionStatus(f)
+	end
+end
+
 
 -- UNIT_NAME_UPDATE
 function XPerl_Party_Events:UNIT_NAME_UPDATE()
@@ -1522,6 +1555,7 @@ function XPerl_Party_Set_Bits1(self)
 		end
 	else
 		self.portraitFrame:Show()
+		self.statsFrame.resurrect:Hide()
 
 		self.levelFrame:SetWidth(27)
 		self.levelFrame:SetHeight(22)
@@ -1793,7 +1827,7 @@ function XPerl_Party_Virtual(on)
 			virtual:SetHeight(h)
 			virtual:SetWidth(w * 4 + (pconf.spacing * 3))
 		end
-
+		virtual:OnBackdropLoaded()
 		virtual:SetBackdropColor(conf.colour.frame.r, conf.colour.frame.g, conf.colour.frame.b, conf.colour.frame.a)
 		virtual:SetBackdropBorderColor(conf.colour.border.r, conf.colour.border.g, conf.colour.border.b, 1)
 		virtual:Lower()
@@ -1840,21 +1874,13 @@ function XPerl_Party_Set_Bits()
 		end
 	end
 
-	if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
-		if pconf.healprediction then
-			XPerl_Party_Events_Frame:RegisterEvent("UNIT_HEAL_PREDICTION")
-		else
-			XPerl_Party_Events_Frame:UnregisterEvent("UNIT_HEAL_PREDICTION")
-		end
-
-		if pconf.absorbs then
-			XPerl_Party_Events_Frame:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-		else
-			XPerl_Party_Events_Frame:UnregisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-		end
-	end
-
 	XPerl_Party_SetInitialAttributes()
+	XPerl_Register_Prediction(XPerl_Party_Events_Frame, pconf, function(guid)
+		local frame = XPerl_Party_GetUnitFrameByGUID(guid)
+		if frame then
+			return frame.partyid
+		end
+	end)
 
 	if (XPerl_Party_AnchorVirtual:IsShown()) then
 		XPerl_Party_Virtual(true)

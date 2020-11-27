@@ -12,6 +12,8 @@ XPerl_RequestConfig(function(new)
 	end
 end, "$Revision:  $")
 
+local IsClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
 local XPerl_Player_Pet_HighlightCallback
 
 -- XPerl_Player_Pet_OnLoad
@@ -97,7 +99,7 @@ function XPerl_Player_Pet_OnLoad(self)
 
 	--RegisterUnitWatch(self)
 	local events = {
-		"UNIT_HEALTH_FREQUENT",
+		IsClassic and "UNIT_HEALTH_FREQUENT" or "UNIT_HEALTH",
 		"UNIT_MAXHEALTH",
 		"UNIT_LEVEL",
 		"UNIT_POWER_FREQUENT",
@@ -113,7 +115,7 @@ function XPerl_Player_Pet_OnLoad(self)
 		"PET_ATTACK_START",
 		"UNIT_COMBAT",
 		"VARIABLES_LOADED",
-		--[["PLAYER_REGEN_ENABLED",]]
+		--"PLAYER_REGEN_ENABLED",
 		"PLAYER_ENTERING_WORLD",
 		"UNIT_ENTERED_VEHICLE",
 		"UNIT_EXITED_VEHICLE",
@@ -122,10 +124,11 @@ function XPerl_Player_Pet_OnLoad(self)
 		"UNIT_TARGET",
 		--"PET_BATTLE_OPENING_START",
 		--"PET_BATTLE_CLOSE"
+		"INCOMING_RESURRECT_CHANGED",
 	}
 	local _, classFileName = UnitClass("player")
 	for i, event in pairs(events) do
-		if string.find(event, "^UNIT_") then
+		if string.find(event, "^UNIT_") or string.find(event, "^INCOMING") then
 			if event == "UNIT_THREAT_LIST_UPDATE" then
 				if pcall(self.RegisterUnitEvent, self, event, "target") then
 					self:RegisterUnitEvent(event, "target")
@@ -162,7 +165,7 @@ function XPerl_Player_Pet_OnLoad(self)
 	self:SetScript("OnShow", XPerl_Unit_UpdatePortrait)
 
 	if (XPerl_ArcaneBar_RegisterFrame) then
-		XPerl_ArcaneBar_RegisterFrame(self.nameFrame, (WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and UnitHasVehicleUI("player")) and "player" or "pet")
+		XPerl_ArcaneBar_RegisterFrame(self.nameFrame, (not IsClassic and UnitHasVehicleUI("player")) and "player" or "pet")
 	end
 
 	XPerl_RegisterHighlight(self.highlight, 2)
@@ -227,25 +230,8 @@ local function XPerl_Player_Pet_UpdateLevel(self)
 	XPerl_Unit_UpdateLevel(self)
 end
 
--- XPerl_Player_Pet_UpdateHealth
-function XPerl_Player_Pet_UpdateHealth(self)
-	local partyid = self.partyid
-	local pethealth = UnitIsGhost(partyid) and 1 or (UnitIsDead(partyid) and 0 or UnitHealth(partyid))
-	local pethealthmax = UnitHealthMax(partyid)
-
-	XPerl_SetHealthBar(self, pethealth, pethealthmax)
-
-	XPerl_Player_Pet_UpdateAbsorbPrediction(self)
-	XPerl_Player_Pet_UpdateHealPrediction(self)
-
-	if (UnitIsDead(partyid)) then
-		self.statsFrame.healthBar.text:SetText(XPERL_LOC_DEAD)
-		self.statsFrame.manaBar.text:Hide()
-	end
-end
-
 -- XPerl_Player_Pet_UpdateAbsorbPrediction
-function XPerl_Player_Pet_UpdateAbsorbPrediction(self)
+local function XPerl_Player_Pet_UpdateAbsorbPrediction(self)
 	if pconf.absorbs then
 		XPerl_SetExpectedAbsorbs(self)
 	else
@@ -254,11 +240,45 @@ function XPerl_Player_Pet_UpdateAbsorbPrediction(self)
 end
 
 -- XPerl_Player_Pet_UpdateHealPrediction
-function XPerl_Player_Pet_UpdateHealPrediction(self)
+local function XPerl_Player_Pet_UpdateHealPrediction(self)
 	if pconf.healprediction then
 		XPerl_SetExpectedHealth(self)
 	else
 		self.statsFrame.expectedHealth:Hide()
+	end
+end
+
+local function XPerl_Player_Pet_UpdateResurrectionStatus(self)
+	if (UnitHasIncomingResurrection(self.partyid)) then
+		if pconf.portrait then
+			self.portraitFrame.resurrect:Show()
+		else
+			self.statsFrame.resurrect:Show()
+		end
+	else
+		if pconf.portrait then
+			self.portraitFrame.resurrect:Hide()
+		else
+			self.statsFrame.resurrect:Hide()
+		end
+	end
+end
+
+-- XPerl_Player_Pet_UpdateHealth
+local function XPerl_Player_Pet_UpdateHealth(self)
+	local partyid = self.partyid
+	local pethealth = UnitIsGhost(partyid) and 1 or (UnitIsDead(partyid) and 0 or UnitHealth(partyid))
+	local pethealthmax = UnitHealthMax(partyid)
+
+	XPerl_SetHealthBar(self, pethealth, pethealthmax)
+
+	XPerl_Player_Pet_UpdateAbsorbPrediction(self)
+	XPerl_Player_Pet_UpdateHealPrediction(self)
+	XPerl_Player_Pet_UpdateResurrectionStatus(self)
+
+	if (UnitIsDead(partyid)) then
+		self.statsFrame.healthBar.text:SetText(XPERL_LOC_DEAD)
+		self.statsFrame.manaBar.text:Hide()
 	end
 end
 
@@ -310,8 +330,8 @@ end
 ---------------
 -- Happiness --
 ---------------
-function XPerl_Player_Pet_SetHappiness(self)
-	if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+local function XPerl_Player_Pet_SetHappiness(self)
+	if not IsClassic then
 		return
 	end
 
@@ -349,7 +369,7 @@ end
 
 -- XPerl_Player_Pet_Update_Control
 local function XPerl_Player_Pet_Update_Control(self)
-	if (UnitIsCharmed(self.partyid) and WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and not UnitInVehicle("player")) then
+	if (UnitIsCharmed(self.partyid) and not IsClassic and not UnitInVehicle("player")) then
 		self.nameFrame.warningIcon:Show()
 	else
 		self.nameFrame.warningIcon:Hide()
@@ -466,23 +486,30 @@ function XPerl_Player_Pet_Events:UNIT_PORTRAIT_UPDATE()
 	XPerl_Unit_UpdatePortrait(self, true)
 end
 
--- UNIT_HEALTH_FREQUENT, UNIT_MAXHEALTH
+-- UNIT_HEALTH_FREQUENT
 function XPerl_Player_Pet_Events:UNIT_HEALTH_FREQUENT()
 	XPerl_Player_Pet_UpdateHealth(self)
 end
 
-XPerl_Player_Pet_Events.UNIT_MAXHEALTH = XPerl_Player_Pet_Events.UNIT_HEALTH_FREQUENT
+-- UNIT_HEALTH
+function XPerl_Player_Pet_Events:UNIT_HEALTH()
+	XPerl_Player_Pet_UpdateHealth(self)
+end
 
--- Ticket 735 Player Pet frame's power bar fix.
--- Thanks Brounks pointed out again... -.- By PlayerLin
+-- UNIT_MAXHEALTH
+function XPerl_Player_Pet_Events:UNIT_MAXHEALTH()
+	XPerl_Player_Pet_UpdateHealth(self)
+end
 
 function XPerl_Player_Pet_Events:UNIT_POWER_FREQUENT()
 	XPerl_Player_Pet_UpdateMana(self)
 	XPerl_Player_Pet_UpdateCombat(self)
 end
 
-XPerl_Player_Pet_Events.UNIT_MAXPOWER = XPerl_Player_Pet_Events.UNIT_POWER_FREQUENT
-
+function XPerl_Player_Pet_Events:UNIT_MAXPOWER()
+	XPerl_Player_Pet_UpdateMana(self)
+	XPerl_Player_Pet_UpdateCombat(self)
+end
 
 -- UNIT_LEVEL
 function XPerl_Player_Pet_Events:UNIT_LEVEL()
@@ -538,7 +565,7 @@ end
 
 -- PLAYER_ENTERING_WORLD
 function XPerl_Player_Pet_Events:PLAYER_ENTERING_WORLD()
-	if (WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and UnitHasVehicleUI("player")) then
+	if (not IsClassic and UnitHasVehicleUI("player")) then
 		self.partyid = "player"
 		self:SetAttribute("unit", "player")
 	else
@@ -627,6 +654,12 @@ function XPerl_Player_Pet_Events:UNIT_ABSORB_AMOUNT_CHANGED(unit)
 	end
 end
 
+function XPerl_Player_Pet_Events:INCOMING_RESURRECT_CHANGED(unit)
+	if unit == self.partyid then
+		XPerl_Player_Pet_UpdateResurrectionStatus(self)
+	end
+end
+
 -- XPerl_Player_Pet_SetWidth
 function XPerl_Player_Pet_SetWidth(self)
 	pconf.size.width = max(0, pconf.size.width or 0)
@@ -691,6 +724,7 @@ function XPerl_Player_Pet_Set_Bits(self)
 	if (pconf.portrait) then
 		self.portraitFrame:Show()
 		self.portraitFrame:SetWidth(50)
+		self.statsFrame.resurrect:Hide()
 	else
 		self.portraitFrame:Hide()
 		self.portraitFrame:SetWidth(3)
@@ -757,19 +791,11 @@ function XPerl_Player_Pet_Set_Bits(self)
 	pconf.buffs.size = tonumber(pconf.buffs.size) or 20
 	XPerl_SetBuffSize(self)
 
-	if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
-		if (pconf.healprediction) then
-			self:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "pet", "player")
-		else
-			self:UnregisterEvent("UNIT_HEAL_PREDICTION")
+	XPerl_Register_Prediction(self, pconf, function (guid)
+		if guid == UnitGUID("pet") then
+			return "pet"
 		end
-
-		if (pconf.absorbs) then
-			self:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", "pet", "player")
-		else
-			self:UnregisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-		end
-	end
+	end, "pet", "player")
 
 	XPerl_Player_Pet_SetWidth(self)
 

@@ -8,12 +8,14 @@ XPerl_RequestConfig(function(new)
 	conf = new
 end, "$Revision:  $")
 
+local IsClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
 local GetNumSubgroupMembers = GetNumSubgroupMembers
 local GetNumGroupMembers = GetNumGroupMembers
 local UnitIsGroupAssistant = UnitIsGroupAssistant
 
 local classOrder
-if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+if IsClassic then
 	classOrder = {"WARRIOR", "ROGUE", "HUNTER", "DRUID", "SHAMAN", "PALADIN", "PRIEST", "MAGE", "WARLOCK", "MONK"}
 else
 	classOrder = {"WARRIOR", "DEATHKNIGHT", "ROGUE", "HUNTER", "DRUID", "SHAMAN", "PALADIN", "PRIEST", "MAGE", "WARLOCK", "MONK", "DEMONHUNTER"}
@@ -103,6 +105,7 @@ end
 
 -- SetupUnitFrame
 local function SetupUnitFrame(self)
+	self:OnBackdropLoaded()
 	self:SetBackdropBorderColor(conf.colour.border.r, conf.colour.border.g, conf.colour.border.b, conf.colour.border.a)
 	self:SetBackdropColor(conf.colour.frame.r, conf.colour.frame.g, conf.colour.frame.b, conf.colour.frame.a)
 	XPerl_DoGradient(self)
@@ -280,7 +283,7 @@ local function GetNamesWithoutBuff(spellName, with, filter)
 						--withList[group] = XPerl_GetReusableTable()
 						withList[group] = { }
 					end
-					tinsert(withList[group], {class = unitClass, ["name"] = unitName})
+					tinsert(withList[group], {class = unitClass, name = unitName})
 				elseif (conf.buffHelper.sort == "class") then
 					if (not withList[unitClass]) then
 						--withList[unitClass] = XPerl_GetReusableTable()
@@ -306,7 +309,9 @@ local function GetNamesWithoutBuff(spellName, with, filter)
 
 				names = (names or "").."|r"..i..": "
 				for i, item in ipairs(list) do
-					names = names..XPerlColourTable[item.class]..item.name.." "
+					if item.class and item.class then
+						names = names..XPerlColourTable[item.class]..item.name.." "
+					end
 				end
 				names = names.."|r\r"
 			end

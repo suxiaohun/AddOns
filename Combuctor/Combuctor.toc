@@ -1,16 +1,9 @@
 ## Interface: 90002
 ## Title: Combuctor
 ## Author: Tuller & Jaliborc (João Cardoso)
-## Notes: Pants are a dangerous foe
-## SavedVariables: Combuctor_Sets
-
+## Notes: Single window displays for your inventory and bank
 ## OptionalDeps: BagBrother, WoWUnit
-## Version: 8.2.0
+## SavedVariables: Combuctor_Sets
+## Version: 9.0.1
 
-main.lua
-
-common\Wildpants.xml
-components\components.xml
-style.xml
-
-legacy.lua
+addons\main\main.xml

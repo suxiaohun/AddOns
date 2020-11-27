@@ -12,20 +12,19 @@ local LAST_BANK_SLOT = NUM_BAG_SLOTS + NUM_BANKBAGSLOTS
 local FIRST_BANK_SLOT = NUM_BAG_SLOTS + 1
 local TOTAL = SILVER:format(L.Total)
 
-local Cache = LibStub('LibItemCache-2.0')
-local ItemText, ItemCount, Hooked = {}, {}
+local ItemText, ItemCount
 
 
 --[[ Adding Text ]]--
 
 local function FindItemCount(owner, bag, itemID)
 	local count = 0
-	local info = Cache:GetBagInfo(owner, bag)
+	local info = Addon:GetBagInfo(owner, bag)
 
 	for slot = 1, (info.count or 0) do
-		local id = Cache:GetItemID(owner, bag, slot)
+		local id = Addon:GetItemID(owner, bag, slot)
 		if id == itemID then
-			count = count + (Cache:GetItemInfo(owner, bag, slot).count or 1)
+			count = count + (Addon:GetItemInfo(owner, bag, slot).count or 1)
 		end
 	end
 
@@ -68,9 +67,9 @@ local function AddOwners(tooltip, link)
 	local players = 0
 	local total = 0
 
-	for owner in Cache:IterateOwners() do
-		local info = Cache:GetOwnerInfo(owner)
-		local color = Addon:GetOwnerColorString(info)
+	for owner in Addon:IterateOwners() do
+		local info = Addon:GetOwnerInfo(owner)
+		local color = Addon.Owners:GetColorString(info)
 		local count, text = ItemCount[owner] and ItemCount[owner][itemID]
 
 		if count then
@@ -89,7 +88,12 @@ local function AddOwners(tooltip, link)
 					for i = FIRST_BANK_SLOT, LAST_BANK_SLOT do
 						bank = bank + FindItemCount(owner, i, itemID)
 					end
-					bank = bank + FindItemCount(owner, REAGENTBANK_CONTAINER, itemID)
+
+					if REAGENTBANK_CONTAINER then
+						bank = bank + FindItemCount(owner, REAGENTBANK_CONTAINER, itemID)
+					end
+
+					bank = bank + FindItemCount(owner, BANK_CONTAINER, itemID)
 				else
 					local owned = GetItemCount(itemID, true)
 					local carrying = GetItemCount(itemID)
@@ -119,7 +123,7 @@ local function AddOwners(tooltip, link)
 		end
 
 		if count > 0 then
-			tooltip:AddDoubleLine(format('|T%s:12:12|t ', Addon:GetOwnerIcon(info)) .. color:format(info.name), text)
+			tooltip:AddDoubleLine(Addon.Owners:GetIconString(info, 12,0,0) .. ' ' .. color:format(info.name), text)
 			total = total + count
 			players = players + 1
 		end
@@ -138,17 +142,13 @@ end
 
 local function OnItem(tooltip)
 	local name, link = tooltip:GetItem()
-	if name ~= '' then -- Blizzard broke tooltip:GetItem() in 6.2
+	if name ~= '' then
 		AddOwners(tooltip, link)
 	end
 end
 
 local function OnTradeSkill(tooltip, recipe, reagent)
-    if reagent then
-        AddOwners(tooltip, C_TradeSkillUI.GetRecipeReagentItemLink(recipe, reagent))
-    else
-        AddOwners(tooltip, C_TradeSkillUI.GetRecipeItemLink(recipe))
-    end
+	AddOwners(tooltip, tonumber(reagent) and C_TradeSkillUI.GetRecipeReagentItemLink(recipe, reagent) or C_TradeSkillUI.GetRecipeItemLink(recipe))
 end
 
 local function OnQuest(tooltip, type, quest)
@@ -163,10 +163,13 @@ local function HookTip(tooltip)
 	tooltip:HookScript('OnTooltipCleared', OnClear)
 	tooltip:HookScript('OnTooltipSetItem', OnItem)
 
-  hooksecurefunc(tooltip, 'SetRecipeReagentItem', OnTradeSkill)
-  hooksecurefunc(tooltip, 'SetRecipeResultItem', OnTradeSkill)
 	hooksecurefunc(tooltip, 'SetQuestItem', OnQuest)
 	hooksecurefunc(tooltip, 'SetQuestLogItem', OnQuest)
+
+	if C_TradeSkillUI then
+		hooksecurefunc(tooltip, 'SetRecipeReagentItem', OnTradeSkill)
+		hooksecurefunc(tooltip, 'SetRecipeResultItem', OnTradeSkill)
+	end
 end
 
 
@@ -174,10 +177,11 @@ end
 
 function TooltipCounts:OnEnable()
 	if Addon.sets.tipCount then
-		if not Hooked then
+		if not ItemText then
+			ItemText, ItemCount = {}, {}
+
 			HookTip(GameTooltip)
 			HookTip(ItemRefTooltip)
-			Hooked = true
 		end
 	end
 end

@@ -36,11 +36,12 @@ end
 
 --local new, del, copy = XPerl_GetReusableTable, XPerl_FreeTable, XPerl_CopyTable
 
+local IsClassic = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+
 local format = format
 local strsub = strsub
 
 local GetNumGroupMembers = GetNumGroupMembers
-local UnitCastingInfo = UnitCastingInfo
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
 local UnitIsConnected = UnitIsConnected
@@ -56,6 +57,13 @@ local XPerl_UnitDebuff = XPerl_UnitDebuff
 local XPerl_CheckDebuffs = XPerl_CheckDebuffs
 local XPerl_ColourFriendlyUnit = XPerl_ColourFriendlyUnit
 local XPerl_ColourHealthBar = XPerl_ColourHealthBar
+
+local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo
+local LCC = LibStub("LibClassicCasterino", true)
+if LCC then
+    UnitCastingInfo = function(unit) return LCC:UnitCastingInfo(unit); end
+    UnitChannelInfo = function(unit) return LCC:UnitChannelInfo(unit); end
+end
 
 -- TODO - Watch for:	 ERR_FRIEND_OFFLINE_S = "%s has gone offline."
 
@@ -77,7 +85,7 @@ for k, v in pairs(localGroups) do
 end
 
 local resSpells
-if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+if IsClassic then
 	resSpells = {
 		[GetSpellInfo(2006)] = true,			-- Resurrection
 		[GetSpellInfo(2008)] = true,			-- Ancestral Spirit
@@ -119,7 +127,7 @@ function XPerl_Raid_OnLoad(self)
 		"UNIT_AURA",
 		"UNIT_POWER_FREQUENT",
 		"UNIT_MAXPOWER",
-		"UNIT_HEALTH_FREQUENT",
+		IsClassic and "UNIT_HEALTH_FREQUENT" or "UNIT_HEALTH",
 		"UNIT_MAXHEALTH",
 		"UNIT_NAME_UPDATE",
 		"PLAYER_FLAGS_CHANGED",
@@ -133,19 +141,24 @@ function XPerl_Raid_OnLoad(self)
 		"PET_BATTLE_OPENING_START",
 		"PET_BATTLE_CLOSE",
 		"UNIT_CONNECTION",
+		"UNIT_SPELLCAST_START",
+		"UNIT_SPELLCAST_STOP",
+		"UNIT_SPELLCAST_FAILED",
+		"UNIT_SPELLCAST_INTERRUPTED",
 		--"PLAYER_REGEN_ENABLED",
+		"INCOMING_RESURRECT_CHANGED",
 	}
 
-	if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
-		tinsert(events, "UNIT_SPELLCAST_START")
-		tinsert(events, "UNIT_SPELLCAST_STOP")
-		tinsert(events, "UNIT_SPELLCAST_FAILED")
-		tinsert(events, "UNIT_SPELLCAST_INTERRUPTED")
+	local CastbarEventHandler = function(event, ...)
+		return XPerl_Raid_OnEvent(self, event, ...)
 	end
-
 	for i, event in pairs(events) do
-		if pcall(self.RegisterEvent, self, event) then
-			self:RegisterEvent(event)
+		if LCC and strfind(event, "^UNIT_SPELLCAST") then
+			LCC.RegisterCallback(self, event, CastbarEventHandler)
+		else
+			if pcall(self.RegisterEvent, self, event) then
+				self:RegisterEvent(event)
+			end
 		end
 	end
 
@@ -156,7 +169,7 @@ function XPerl_Raid_OnLoad(self)
 		tinsert(raidHeaders, _G[XPERL_RAIDGRP_PREFIX..i])
 	end
 
-	if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+	if not IsClassic then
 		self.state = CreateFrame("Frame", nil, nil, "SecureHandlerStateTemplate")
 		self.state:SetFrameRef("ZPerlRaidHeader1", _G[XPERL_RAIDGRP_PREFIX..1])
 		self.state:SetFrameRef("ZPerlRaidHeader2", _G[XPERL_RAIDGRP_PREFIX..2])
@@ -476,11 +489,37 @@ local function XPerl_Raid_ShowFlags(self, flags)
 	--del(flags)
 end
 
+-- XPerl_Raid_UpdateAbsorbPrediction
+local function XPerl_Raid_UpdateAbsorbPrediction(self)
+	if rconf.absorbs then
+		XPerl_SetExpectedAbsorbs(self)
+	else
+		self.statsFrame.expectedAbsorbs:Hide()
+	end
+end
+
+-- XPerl_Raid_UpdateHealPrediction
+local function XPerl_Raid_UpdateHealPrediction(self)
+	if rconf.healprediction then
+		XPerl_SetExpectedHealth(self)
+	else
+		self.statsFrame.expectedHealth:Hide()
+	end
+end
+
+local function XPerl_Raid_UpdateResurrectionStatus(self)
+	if (UnitHasIncomingResurrection(self.partyid)) then
+		self.statsFrame.resurrect:Show()
+	else
+		self.statsFrame.resurrect:Hide()
+	end
+end
+
 local feignDeath = GetSpellInfo(5384)
 local spiritOfRedemption = GetSpellInfo(27827)
 
 -- XPerl_Raid_UpdateHealth
-function XPerl_Raid_UpdateHealth(self)
+local function XPerl_Raid_UpdateHealth(self)
 	local partyid = self.partyid
 	if (not partyid) then
 		return
@@ -489,14 +528,14 @@ function XPerl_Raid_UpdateHealth(self)
 	local health = UnitIsGhost(partyid) and 1 or (UnitIsDead(partyid) and 0 or UnitHealth(partyid))
 	local healthmax = UnitHealthMax(partyid)
 
-	if (health > healthmax) then
+	--[[if (health > healthmax) then
 		-- New glitch with 1.12.1
 		if (UnitIsDeadOrGhost(partyid)) then
 			health = 0
 		else
 			health = healthmax
 		end
-	end
+	end--]]
 
 	self.statsFrame.healthBar:SetMinMaxValues(0, healthmax)
 	if (conf.bar.inverse) then
@@ -513,6 +552,7 @@ function XPerl_Raid_UpdateHealth(self)
 
 	XPerl_Raid_UpdateAbsorbPrediction(self)
 	XPerl_Raid_UpdateHealPrediction(self)
+	XPerl_Raid_UpdateResurrectionStatus(self)
 
 	local name, realm = UnitName(partyid)
 	if realm and realm ~= "" then
@@ -574,9 +614,9 @@ function XPerl_Raid_UpdateHealth(self)
 				if rconf.values then
 					self.statsFrame.healthBar.text:SetFormattedText("%d/%d", health, healthmax)
 				elseif rconf.precisionPercent then
-					self.statsFrame.healthBar.text:SetFormattedText(percF, (percentHp) * 100)
+					self.statsFrame.healthBar.text:SetFormattedText(percF, percentHp * 100 + 0.05)
 				else
-					self.statsFrame.healthBar.text:SetFormattedText(percD, (percentHp) * 100)
+					self.statsFrame.healthBar.text:SetFormattedText(percD, percentHp * 100 + 0.5)
 				end
 			end
 
@@ -602,24 +642,6 @@ function XPerl_Raid_UpdateHealth(self)
 			myRoster.afk = nil
 			myRoster.dnd = nil
 		end
-	end
-end
-
--- XPerl_Raid_UpdateAbsorbPrediction
-function XPerl_Raid_UpdateAbsorbPrediction(self)
-	if rconf.absorbs then
-		XPerl_SetExpectedAbsorbs(self)
-	else
-		self.statsFrame.expectedAbsorbs:Hide()
-	end
-end
-
--- XPerl_Raid_UpdateHealPrediction
-function XPerl_Raid_UpdateHealPrediction(self)
-	if rconf.healprediction then
-		XPerl_SetExpectedHealth(self)
-	else
-		self.statsFrame.expectedHealth:Hide()
 	end
 end
 
@@ -701,8 +723,8 @@ function XPerl_Raid_Single_OnLoad(self)
 	XPerl_RegisterPerlFrames(self, {self.nameFrame, self.statsFrame})
 	self.FlashFrames = {self.nameFrame, self.statsFrame}
 
-	-- FIX FOR 4.0.1 raids
 	self:SetScript("OnAttributeChanged", onAttrChanged)
+
 	XPerl_RegisterClickCastFrame(self)
 	XPerl_RegisterClickCastFrame(self.nameFrame)
 
@@ -805,9 +827,9 @@ end
 -- GetShowCast
 local function GetShowCast(self)
 	if (rconf.buffs.enable) then
-		return "b", (rconf.buffs.castable == 1) and "RAID"
+		return "b", (rconf.buffs.castable == 1) and "HELPFUL|RAID" or "HELPFUL"
 	elseif (rconf.debuffs.enable) then
-		return "d", (rconf.buffs.castable == 1) and "RAID"
+		return "d", (rconf.buffs.castable == 1) and "HARMFUL|RAID" or "HARMFUL"
 	end
 end
 
@@ -1200,7 +1222,7 @@ function XPerl_Raid_UpdateDisplay(self)
 		XPerl_Raid_UpdateManaType(self)
 		XPerl_Raid_UpdateMana(self)
 	end
-	if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+	if not IsClassic then
 		XPerl_Raid_RoleUpdate(self, UnitGroupRolesAssigned(self.partyid))
 	end
 	XPerl_Raid_UpdatePlayerFlags(self)
@@ -1240,7 +1262,7 @@ function XPerl_Raid_HideShowRaid()
 
 	for i = 1, WoWclassCount do
 		if (rconf.group[i] and enable and (i < 9 or rconf.sortByClass) and not singleGroup) then
-			if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and not C_PetBattles.IsInBattle() then
+			if not IsClassic and not C_PetBattles.IsInBattle() then
 				if (not raidHeaders[i]:IsShown()) then
 					raidHeaders[i]:Show()
 				end
@@ -1290,7 +1312,7 @@ local function DisableCompactRaidFrames()
 	SetRaidProfileOption(CompactUnitFrameProfiles.selectedProfile, "autoActivate10Players", false)
 	SetRaidProfileOption(CompactUnitFrameProfiles.selectedProfile, "autoActivate15Players", false)
 	SetRaidProfileOption(CompactUnitFrameProfiles.selectedProfile, "autoActivate40Players", false)
-	if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+	if IsClassic then
 		SetRaidProfileOption(CompactUnitFrameProfiles.selectedProfile, "autoActivate20Players", false)
 	else
 		SetRaidProfileOption(CompactUnitFrameProfiles.selectedProfile, "autoActivate25Players", false)
@@ -1455,7 +1477,7 @@ function XPerl_Raid_Events:GROUP_ROSTER_UPDATE()
 	BuildGuidMap()
 	if (IsInRaid() or (IsInGroup() and rconf.inParty)) then
 		XPerl_Raid_Frame:Show()
-		if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
+		if not IsClassic then
 			if (rconf.raid_role) then
 				for i, frame in pairs(FrameArray) do
 					if (frame.partyid) then
@@ -1502,7 +1524,18 @@ function XPerl_Raid_Events:UNIT_HEALTH_FREQUENT()
 	XPerl_Raid_UpdateHealth(self)
 	XPerl_Raid_UpdateCombat(self)
 end
-XPerl_Raid_Events.UNIT_MAXHEALTH = XPerl_Raid_Events.UNIT_HEALTH_FREQUENT
+
+-- UNIT_HEALTH
+function XPerl_Raid_Events:UNIT_HEALTH()
+	XPerl_Raid_UpdateHealth(self)
+	XPerl_Raid_UpdateCombat(self)
+end
+
+-- UNIT_MAXHEALTH
+function XPerl_Raid_Events:UNIT_MAXHEALTH()
+	XPerl_Raid_UpdateHealth(self)
+	XPerl_Raid_UpdateCombat(self)
+end
 
 -- UNIT_DISPLAYPOWER
 function XPerl_Raid_Events:UNIT_DISPLAYPOWER()
@@ -1541,6 +1574,15 @@ function XPerl_Raid_Events:READY_CHECK(a, b, c)
 		end
 	end
 end
+
+function XPerl_Raid_Events:INCOMING_RESURRECT_CHANGED(unit)
+	for i, frame in pairs(FrameArray) do
+		if (frame.partyid and unit == frame.partyid) then
+			XPerl_Raid_UpdateResurrectionStatus(frame)
+		end
+	end
+end
+
 
 XPerl_Raid_Events.READY_CHECK_CONFIRM = XPerl_Raid_Events.READY_CHECK
 XPerl_Raid_Events.READY_CHECK_FINISHED = XPerl_Raid_Events.READY_CHECK
@@ -2057,7 +2099,7 @@ function XPerl_RaidTitles()
 					virtualFrame:SetHeight((rconf.mana and 1 or 0) * 5 + 38)
 					virtualFrame:SetWidth(80 * rows + (rconf.spacing * (rows - 1)) + rconf.size.width)
 				end
-
+				virtualFrame:OnBackdropLoaded()
 				virtualFrame:SetBackdropColor(conf.colour.frame.r, conf.colour.frame.g, conf.colour.frame.b, conf.colour.frame.a)
 				virtualFrame:SetBackdropBorderColor(conf.colour.border.r, conf.colour.border.g, conf.colour.border.b, 1)
 				if rconf.group[i] then
@@ -2421,7 +2463,7 @@ local function SetMainHeaderAttributes(self)
 end
 
 local function DefaultRaidClasses()
-	if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+	if IsClassic then
 		return {
 			{enable = true, name = "WARRIOR"},
 			--{enable = true, name = "DEATHKNIGHT"},
@@ -2501,7 +2543,7 @@ function XPerl_Raid_ChangeAttributes()
 
 	rconf.anchor = (rconf and rconf.anchor) or "TOP"
 
-	for i = 1, rconf.sortByClass and WoWclassCount or (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC and 9 or 12) do
+	for i = 1, rconf.sortByClass and WoWclassCount or (IsClassic and 9 or 12) do
 		local groupHeader = raidHeaders[i]
 
 		-- Hide this when we change attributes, so the whole re-calc is only done once, instead of for every attribute change
@@ -2585,19 +2627,12 @@ function XPerl_Raid_Set_Bits(self)
 
 	SkipHighlightUpdate = nil
 
-	if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then
-		if (rconf.healprediction) then
-			self:RegisterEvent("UNIT_HEAL_PREDICTION")
-		else
-			self:UnregisterEvent("UNIT_HEAL_PREDICTION")
+	XPerl_Register_Prediction(self, rconf, function(guid)
+		local frame = XPerl_Raid_GetUnitFrameByGUID(guid)
+		if frame then
+			return frame.partyid
 		end
-
-		if (rconf.absorbs) then
-			self:RegisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-		else
-			self:UnregisterEvent("UNIT_ABSORB_AMOUNT_CHANGED")
-		end
-	end
+	end)
 
 	if (IsInRaid() or (IsInGroup() and rconf.inParty)) then
 		XPerl_Raid_Frame:Show()
