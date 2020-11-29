@@ -34,15 +34,7 @@ local frame2 = CreateFrame("Frame", nil, UIParent)
 frame2:SetHeight(70)
 frame2:SetWidth(270)
 frame2:SetPoint("CENTER", UIParent, "CENTER", 10, 120)
-frame2:SetBackdrop({
-    --bgFile="Interface/Tooltips/UI-Tooltip-Background",
-    bgFile = "",
-    edgeFile = "",
-    tile = true,
-    tileSize = 16,
-    edgeSize = 16,
-    insets = { left = 5, right = 5, top = 5, bottom = 5 }
-})
+
 local statFrame = CreateFrame("Frame", nil, UIParent)
 statFrame:SetHeight(200)
 statFrame:SetMovable(true)
@@ -53,14 +45,7 @@ statFrame:SetScript("OnDragStop", statFrame.StopMovingOrSizing)
 
 statFrame:SetWidth(100)
 statFrame:SetPoint("TOP", UIParent, "CENTER", -300, 0)
-statFrame:SetBackdrop({
-    bgFile = "Interface/DialogFrame/UI-DialogBox-Background",
-    edgeFile = "",
-    tile = true,
-    tileSize = 16,
-    edgeSize = 16,
-    insets = { left = 5, right = 5, top = 5, bottom = 5 }
-})
+
 
 local sf1 = statFrame:CreateFontString()
 --statFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -78,14 +63,6 @@ local info_frame = CreateFrame("Frame", nil, UIParent)
 info_frame:SetHeight(30)
 info_frame:SetWidth(700)
 info_frame:SetPoint("TOP", UIParent, "TOP", -300, 0)
-info_frame:SetBackdrop({
-    --bgFile="Interface/Tooltips/UI-Tooltip-Background",
-    edgeFile = "",
-    tile = true,
-    tileSize = 16,
-    edgeSize = 16,
-    insets = { left = 5, right = 5, top = 5, bottom = 5 }
-})
 
 local fs3 = info_frame:CreateFontString()
 local fs4 = info_frame:CreateFontString()
@@ -291,6 +268,7 @@ function CombatInfo_OnEvent(frame, event, ...)
     --UpdateCombatRating()
     if event == "PLAYER_REGEN_ENABLED" then
         ChatFrame1:AddMessage("leave combat")
+        C_Timer.After(3, ClearCombatNumber)
         --CombatInfoFrameText:SetText(GetUnitSpeed("player"))
     elseif event == "PLAYER_REGEN_DISABLED" then
         ChatFrame1:AddMessage("in combat")
@@ -426,6 +404,10 @@ function UpdateCombatNumber(msg, ...)
     fs:SetFont("Fonts\\ARHei.ttf", size, "OUTLINE, MONOCHROME")
     fs:SetTextColor(color[1], color[2], color[3])
     fs:SetText(msg)
+end
+
+function ClearCombatNumber()
+    fs:SetText("")
 end
 
 --UpdateCombatNumber("hello")
