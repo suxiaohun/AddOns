@@ -337,11 +337,14 @@
 	local tremove = _G.tremove
 
 	--delete an actor from the combat ~delete ~erase ~remove
-	function combate:DeleteActor(attribute, actorName, removeDamageTaken)
+	function combate:DeleteActor(attribute, actorName, removeDamageTaken, cannotRemap)
 		local container = self[attribute]
 		if (container) then
 
 			local actorTable = container._ActorTable
+
+			--store the index it was found
+			local indexToDelete
 
 			--get the object for the deleted actor
 			local deletedActor = self(attribute, actorName)
@@ -351,53 +354,67 @@
 				for i = 1, #actorTable do
 					local actor = actorTable[i]
 					if (actor.nome == actorName) then
-						print ("Details: found the actor: ", actorName, actor.nome, i)
+						--print ("Details: found the actor: ", actorName, actor.nome, i)
+						indexToDelete = i
 						break
 					end
 				end
 			end
 
-			--store the index it was found
-			local indexToDelete
-
 			for i = 1, #actorTable do
-				local actor = actorTable[i]
+				--is this not the actor we want to remove?
+				if (i ~= indexToDelete) then
 
-				--is this the actor we want to remove?
-				if (actor.nome == actorName or actor == deletedActor) then
-					indexToDelete = i
-				else
-					--get the damage dealt and remove
-					local damageDoneToRemovedActor = (actor.targets[actorName]) or 0
-					actor.targets[actorName] = nil
-					actor.total = actor.total - damageDoneToRemovedActor
-					actor.total_without_pet = actor.total_without_pet - damageDoneToRemovedActor
+					local actor = actorTable[i]
+					if (not actor.isTank) then
+						--get the damage dealt and remove
+						local damageDoneToRemovedActor = (actor.targets[actorName]) or 0
+						actor.targets[actorName] = nil
+						actor.total = actor.total - damageDoneToRemovedActor
+						actor.total_without_pet = actor.total_without_pet - damageDoneToRemovedActor
 
-					--damage taken
-					if (removeDamageTaken) then
-						local hadDamageTaken = actor.damage_from[actorName]
-						if (hadDamageTaken) then
-							--query the deleted actor to know how much damage it applied to this actor
-							local damageDoneToActor = (deletedActor.targets[actor.nome]) or 0
-							actor.damage_taken = actor.damage_taken - damageDoneToActor
+						--damage taken
+						if (removeDamageTaken) then
+							local hadDamageTaken = actor.damage_from[actorName]
+							if (hadDamageTaken) then
+								--query the deleted actor to know how much damage it applied to this actor
+								local damageDoneToActor = (deletedActor.targets[actor.nome]) or 0
+								actor.damage_taken = actor.damage_taken - damageDoneToActor
+							end
 						end
-					end
 
-					--spells
-					local spellsTable = actor.spells._ActorTable
-					for spellId, spellTable in pairs(spellsTable) do
-						local damageDoneToRemovedActor = (spellTable.targets[actorName]) or 0
-						spellTable.targets[actorName] = nil
-						spellTable.total = spellTable.total - damageDoneToRemovedActor
+						--spells
+						local spellsTable = actor.spells._ActorTable
+						for spellId, spellTable in pairs(spellsTable) do
+							local damageDoneToRemovedActor = (spellTable.targets[actorName]) or 0
+							spellTable.targets[actorName] = nil
+							spellTable.total = spellTable.total - damageDoneToRemovedActor
+						end
 					end
 				end
 			end
 
 			if (indexToDelete) then
-				tremove(container._ActorTable, indexToDelete)
-				print("Details: damage done to ".. actorName .." removed.")
-			else
-				print("Details: index of the " .. actorName .. " not found on map index.")
+				local actorToDelete = self(attribute, actorName)
+				local actorToDelete2 = container._ActorTable[indexToDelete]
+				
+				if (actorToDelete ~= actorToDelete2) then
+					Details:Msg("error 0xDE8745")
+				end
+
+				local index = container._NameIndexTable[actorName]
+				if (indexToDelete ~= index) then
+					Details:Msg("error 0xDE8751")
+				end
+
+				--remove actor
+				tremove(container._ActorTable, index)
+
+				--remap
+				if (not cannotRemap) then
+					container:Remap()
+				end
+				return true
 			end
 		end
 	end
@@ -456,6 +473,7 @@
 		
 		--> players in the raid
 		esta_tabela.raid_roster = {}
+		esta_tabela.raid_roster_indexed = {}
 		
 		--> frags
 		esta_tabela.frags = {}

@@ -74,6 +74,9 @@
 	local TheNightfallen = GetFactionInfoByID (1859) or "1"
 	local TheWardens = GetFactionInfoByID (1894) or "1"
 
+	local SPELLID_SANGUINE_HEAL = 226510
+	local sanguineActorName = GetSpellInfo(SPELLID_SANGUINE_HEAL)
+
 	local IsFactionNpc = {
 		[KirinTor] = true,
 		[Valarjar] = true,
@@ -217,37 +220,52 @@
 		
 			--> � um player
 			if (_bit_band (flag, OBJECT_TYPE_PLAYER) ~= 0) then
-			
+				
 				if (not _detalhes.ignore_nicktag) then
 					novo_objeto.displayName = _detalhes:GetNickname (nome, false, true) --> serial, default, silent
+					if (novo_objeto.displayName and novo_objeto.displayName ~= "") then
+						--don't display empty nicknames
+						if (novo_objeto.displayName:find(" ")) then
+							if (_detalhes.remove_realm_from_name) then
+								novo_objeto.displayName = nome:gsub (("%-.*"), "")
+							else
+								novo_objeto.displayName = nome
+							end
+						end
+					end
 				end
+
 				if (not novo_objeto.displayName) then
 					if (_detalhes.remove_realm_from_name) then
 						novo_objeto.displayName = nome:gsub (("%-.*"), "")
 					else
 						novo_objeto.displayName = nome
-					end				
-					--[=[
-				
-					if (_IsInInstance() and _detalhes.remove_realm_from_name) then
-						novo_objeto.displayName = nome:gsub (("%-.*"), "")
-						
-					elseif (_detalhes.remove_realm_from_name) then
-						novo_objeto.displayName = nome:gsub (("%-.*"), "%*") --nome = nil
-						
-					else
-						novo_objeto.displayName = nome
 					end
-					--]=]
 				end
-				
+
 				if (_detalhes.all_players_are_group or _detalhes.immersion_enabled) then
 					novo_objeto.grupo = true
 				end
-				
+
+				--special spells to add into the group view
+				local spellId = Details.SpecialSpellActorsName[novo_objeto.nome]
+				if (spellId) then
+					novo_objeto.grupo = true
+
+					if (Details.KyrianWeaponSpellIds[spellId]) then
+						novo_objeto.spellicon = GetSpellTexture(Details.KyrianWeaponActorSpellId)
+						novo_objeto.nome = Details.KyrianWeaponActorName
+						novo_objeto.displayName = Details.KyrianWeaponActorName
+						novo_objeto.customColor = Details.KyrianWeaponColor
+						nome = Details.KyrianWeaponActorName
+					else
+						novo_objeto.spellicon = GetSpellTexture(spellId)
+					end
+				end
+
 				if ((_bit_band (flag, IS_GROUP_OBJECT) ~= 0 and novo_objeto.classe ~= "UNKNOW" and novo_objeto.classe ~= "UNGROUPPLAYER") or _detalhes:IsInCache (serial)) then
 					novo_objeto.grupo = true
-					
+
 					if (_detalhes:IsATank (serial)) then
 						novo_objeto.isTank = true
 					end
@@ -256,7 +274,7 @@
 						novo_objeto.grupo = true
 					end
 				end
-				
+
 				--> pvp duel
 				if (_detalhes.duel_candidates [serial]) then
 					--> check if is recent
@@ -265,38 +283,37 @@
 						novo_objeto.enemy = true
 					end
 				end
-				
+
 				if (_detalhes.is_in_arena) then
-				
-					local my_team_color = GetBattlefieldArenaFaction()
-				
+					local my_team_color = GetBattlefieldArenaFaction and GetBattlefieldArenaFaction() or 0
+
 					if (novo_objeto.grupo) then --> is ally
 						novo_objeto.arena_ally = true
-						novo_objeto.arena_team = my_team_color
+						novo_objeto.arena_team = 0 --my_team_color | forcing the player team to always be the same color
 					else --> is enemy
 						novo_objeto.enemy = true
 						novo_objeto.arena_enemy = true
-						novo_objeto.arena_team = 1 - my_team_color
+						novo_objeto.arena_team = 1 -- - my_team_color
 					end
-					
+
 					local arena_props = _detalhes.arena_table [nome]
 
 					if (arena_props) then
 						novo_objeto.role = arena_props.role
-						
+
 						if (arena_props.role == "NONE") then
-							local role = UnitGroupRolesAssigned (nome)
-							if (role ~= "NONE") then
+							local role = UnitGroupRolesAssigned and UnitGroupRolesAssigned(nome)
+							if (role and role ~= "NONE") then
 								novo_objeto.role = role
 							end
 						end
 					else
-						local oponentes = GetNumArenaOpponentSpecs()
+						local oponentes = GetNumArenaOpponentSpecs and GetNumArenaOpponentSpecs() or 5
 						local found = false
 						for i = 1, oponentes do
 							local name = GetUnitName ("arena" .. i, true)
 							if (name == nome) then
-								local spec = GetArenaOpponentSpec (i)
+								local spec = GetArenaOpponentSpec and GetArenaOpponentSpec (i)
 								if (spec) then
 									local id, name, description, icon, role, class = DetailsFramework.GetSpecializationInfoByID (spec) --thanks pas06
 									novo_objeto.role = role
@@ -308,15 +325,15 @@
 							end
 						end
 						
-						local role = UnitGroupRolesAssigned (nome)
-						if (role ~= "NONE") then
+						local role = UnitGroupRolesAssigned and UnitGroupRolesAssigned (nome)
+						if (role and role ~= "NONE") then
 							novo_objeto.role = role
 							found = true
 						end
 						
-						if (not found and nome == _detalhes.playername) then						
+						if (not found and nome == _detalhes.playername) then
 							local role = UnitGroupRolesAssigned ("player")
-							if (role ~= "NONE") then
+							if (role and role ~= "NONE") then
 								novo_objeto.role = role
 							end
 						end
@@ -426,10 +443,13 @@
 		
 		pet_tooltip_frame:SetOwner (WorldFrame, "ANCHOR_NONE")
 		pet_tooltip_frame:SetHyperlink ("unit:" .. serial or "")
+
+		Details.tabela_vigente.raid_roster_indexed = Details.tabela_vigente.raid_roster_indexed or {}
 		
 		local line1 = _G ["DetailsPetOwnerFinderTextLeft2"]
 		local text1 = line1 and line1:GetText()
 		if (text1 and text1 ~= "") then
+			--for _, playerName in ipairs(Details.tabela_vigente.raid_roster_indexed) do
 			for playerName, _ in _pairs (_detalhes.tabela_vigente.raid_roster) do
 				local pName = playerName
 				playerName = playerName:gsub ("%-.*", "") --remove realm name
@@ -458,6 +478,7 @@
 		local text2 = line2 and line2:GetText()
 		if (text2 and text2 ~= "") then
 			for playerName, _ in _pairs (_detalhes.tabela_vigente.raid_roster) do
+			--for _, playerName in ipairs(Details.tabela_vigente.raid_roster_indexed) do
 				local pName = playerName
 				playerName = playerName:gsub ("%-.*", "") --remove realm name
 
@@ -500,6 +521,7 @@
 		
 		if (container_pets [serial]) then --> � um pet reconhecido
 			--[[statistics]]-- _detalhes.statistics.container_pet_calls = _detalhes.statistics.container_pet_calls + 1
+
 			local nome_dele, dono_nome, dono_serial, dono_flag = _detalhes.tabela_pets:PegaDono (serial, nome, flag)
 			if (nome_dele and dono_nome) then
 				nome = nome_dele
@@ -512,7 +534,6 @@
 		
 			--> try to find the owner
 			if (flag and _bit_band (flag, OBJECT_TYPE_PETGUARDIAN) ~= 0) then
-			
 				--[[statistics]]-- _detalhes.statistics.container_unknow_pet = _detalhes.statistics.container_unknow_pet + 1
 				local find_nome, find_owner = find_pet_owner (serial, nome, flag, self)
 				if (find_nome and find_owner) then
@@ -697,6 +718,11 @@
 
 			end
 		
+			--sanguine affix
+			if (nome == sanguineActorName) then
+				novo_objeto.grupo = true
+			end
+
 	------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-- grava o objeto no mapa do container
 			local size = #self._ActorTable+1

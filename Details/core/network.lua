@@ -48,6 +48,7 @@
 	local CONST_ROGUE_SR = "SR" --soul rip from akaari's soul (LEGION ONLY)
 
 	DETAILS_PREFIX_COACH = "CO" --coach feature
+	DETAILS_PREFIX_TBC_DATA = "BC" --tbc data
 	
 	_detalhes.network.ids = {
 		["HIGHFIVE_REQUEST"] = CONST_HIGHFIVE_REQUEST,
@@ -71,6 +72,8 @@
 		["CLOUD_SHAREDATA"] = CONST_CLOUD_SHAREDATA,
 
 		["COACH_FEATURE"] = DETAILS_PREFIX_COACH, --ask the raid leader is the coach is enbaled
+
+		["TBC_DATA"] = DETAILS_PREFIX_TBC_DATA, --get basic information about the player
 	}
 	
 	local plugins_registred = {}
@@ -88,9 +91,11 @@
 			return
 		end
 		
-		if (DetailsFramework.IsClassicWow()) then
-			--average item level doesn't exists
-			--talent information is very different
+		if (DetailsFramework.IsTimewalkWoW()) then
+			if (DetailsFramework.IsTBCWow()) then
+				--detect my spec
+				
+			end
 			return
 		end
 		
@@ -171,6 +176,10 @@
 		if (_detalhes.debug) then
 			_detalhes:Msg ("(debug) received version alert ", build_number)
 		end
+
+		if (_detalhes.streamer_config.no_alerts) then
+			return
+		end
 	
 		build_number = tonumber (build_number)
 	
@@ -194,6 +203,9 @@
 	end
 	
 	function _detalhes.network.Cloud_Request (player, realm, core_version, ...)
+		--deprecated | need to remove
+		if (true) then return end
+		
 		if (_detalhes.debug) then
 			_detalhes:Msg ("(debug)", player, _detalhes.host_of, _detalhes:CaptureIsAllEnabled(), core_version == _detalhes.realversion)
 		end
@@ -212,6 +224,9 @@
 	end
 	
 	function _detalhes.network.Cloud_Found (player, realm, core_version, ...)
+		--deprecated | need to remove
+		if (true) then return end
+
 		if (_detalhes.host_by) then
 			return
 		end
@@ -230,6 +245,9 @@
 	end
 	
 	function _detalhes.network.Cloud_DataRequest (player, realm, core_version, ...)
+		--deprecated | need to remove
+		if (true) then return end
+
 		if (not _detalhes.host_of) then
 			return
 		end
@@ -271,6 +289,9 @@
 	end
 	
 	function _detalhes.network.Cloud_DataReceived	(player, realm, core_version, ...)
+		--deprecated | need to remove
+		if (true) then return end
+
 		local atributo, atributo_name, data = player, realm, core_version
 		
 		local container = _detalhes.tabela_vigente [atributo]
@@ -338,6 +359,9 @@
 	end
 	
 	function _detalhes.network.Cloud_Equalize (player, realm, core_version, data)
+		--deprecated | need to remove
+		if (true) then return end
+
 		if (not _detalhes.in_combat) then
 			if (core_version ~= _detalhes.realversion) then
 				return
@@ -368,6 +392,46 @@
 		
 	end
 	
+
+	function _detalhes.network.TBCData(player, realm, coreVersion, data)
+		if (not IsInRaid() and not IsInGroup()) then
+			return
+		end
+
+		local LibDeflate = _G.LibStub:GetLibrary("LibDeflate")
+		local dataCompressed = LibDeflate:DecodeForWoWAddonChannel(data)
+		local dataSerialized = LibDeflate:DecompressDeflate(dataCompressed)
+		local dataTable = {Details:Deserialize(dataSerialized)}
+		tremove(dataTable, 1)
+		local dataTable = dataTable[1]
+
+		local playerRole = dataTable[1]
+		local spec = dataTable[2]
+		local itemLevel = dataTable[3]
+		local talents = dataTable[4]
+		local guid = dataTable[5]
+
+		--[=[
+		print("Details! Received TBC Comm Data:")
+		print("From:", player)
+		print("spec:", spec)
+		print("role:", playerRole)
+		print("item level:", itemLevel)
+		print("guid:", guid)
+		--]=]
+
+		_detalhes.cached_talents[guid] = talents
+		if (spec and spec ~= 0)  then
+			_detalhes.cached_specs[guid] = spec
+		end
+		_detalhes.cached_roles[guid] = playerRole
+		_detalhes.item_level_pool[guid] = {
+			name = player,
+			ilvl = itemLevel,
+			time = time()
+		}
+	end
+
 	--"CIEA" Coach Is Enabled Ask (client > server)
 	--"CIER" Coach Is Enabled Response (server > client)
 	--"CCS" Coach Combat Start (client > server)
@@ -390,21 +454,8 @@
 			return
 		end
 
-		if (core_version ~= _detalhes.realversion) then
-			if (core_version > _detalhes.realversion) then
-				Details:Msg ("your Details! is out dated and cannot use Coach feature.")
-			end
-			return false
-		end
-
-		if (msgType == "CIEA") then --Coach Is Enabled Ask (regular player asked to raid leader)
-			--check if the player that received the msg is the raid leader
-			if (UnitIsGroupLeader("player")) then
-				return
-			end
-
-			--send the answer
-			Details:SendCommMessage(DETAILS_PREFIX_NETWORK, Details:Serialize(DETAILS_PREFIX_COACH, playerName, GetRealmName(), Details.realversion, "CIER", Details.Coach.Server.IsEnabled()), "WHISPER", sourcePlayer)
+		if (msgType == "CIEA") then --Is Coach Enabled Ask (regular player asked to raid leader)
+			Details.Coach.Server.CoachIsEnabled_Answer(sourcePlayer)
 
 		elseif (msgType == "CIER") then --Coach Is Enabled Response (regular player received a raid leader response)
 			local isEnabled = data
@@ -426,11 +477,14 @@
 			Details.Coach.Client.CoachEnd()
 
 		elseif (msgType == "CDT") then --Coach Data (a player in the raid sent to raid leader combat data)
-			if (UnitIsGroupLeader("player")) then
-				if (Details.Coach.Server.IsEnabled()) then
-					--update the current combat with new information
-					Details.packFunctions.DeployUnpackedCombatData(data)
-				end
+			if (Details.Coach.Server.IsEnabled()) then
+				--update the current combat with new information
+				Details.packFunctions.DeployPackedCombatData(data)
+			end
+
+		elseif (msgType == "CDD") then --Coach Death (a player in the raid sent to raid leader his death log)
+			if (Details.Coach.Server.IsEnabled()) then
+				Details.Coach.Server.AddPlayerDeath(sourcePlayer, data)
 			end
 		end
 	end
@@ -568,6 +622,7 @@
 		[CONST_PVP_ENEMY] = _detalhes.network.ReceivedEnemyPlayer,
 
 		[DETAILS_PREFIX_COACH] = _detalhes.network.Coach, --coach feature
+		[DETAILS_PREFIX_TBC_DATA] = _detalhes.network.TBCData
 	}
 	
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -712,9 +767,7 @@
 	end
 	
 	function _detalhes:SendRaidData (type, ...)
-	
 		local isInInstanceGroup = IsInRaid (LE_PARTY_CATEGORY_INSTANCE)
-	
 		if (isInInstanceGroup) then
 			_detalhes:SendCommMessage (DETAILS_PREFIX_NETWORK, _detalhes:Serialize (type, _UnitName("player"), _GetRealmName(), _detalhes.realversion, ...), "INSTANCE_CHAT")
 			if (_detalhes.debug) then
@@ -729,9 +782,7 @@
 	end
 	
 	function _detalhes:SendPartyData (type, ...)
-		
 		local isInInstanceGroup = IsInGroup (LE_PARTY_CATEGORY_INSTANCE)
-		
 		if (isInInstanceGroup) then
 			_detalhes:SendCommMessage (DETAILS_PREFIX_NETWORK, _detalhes:Serialize (type, _UnitName ("player"), _GetRealmName(), _detalhes.realversion, ...), "INSTANCE_CHAT")
 			if (_detalhes.debug) then
@@ -743,7 +794,6 @@
 				_detalhes:Msg ("(debug) sent comm to LOCAL party group")
 			end
 		end
-		
 	end
 	
 	function _detalhes:SendRaidOrPartyData (type, ...)
@@ -758,8 +808,6 @@
 		if not IsInGuild() then return end --> fix from Tim@WoWInterface
 		_detalhes:SendCommMessage (DETAILS_PREFIX_NETWORK, _detalhes:Serialize (type, _UnitName ("player"), _GetRealmName(), _detalhes.realversion, ...), "GUILD")
 	end
-	
-
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --> cloud

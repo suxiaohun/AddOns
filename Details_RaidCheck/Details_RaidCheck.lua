@@ -10,6 +10,8 @@ local DF = DetailsFramework
 
 local UnitGroupRolesAssigned = DF.UnitGroupRolesAssigned
 
+local version = "95"
+
 --> build the list of buffs to track
 local flask_list = DF.FlaskIDs
 
@@ -67,7 +69,6 @@ end
 	tinsert (UISpecialFrames, "Details_RaidCheck")
 	DetailsRaidCheck:SetPluginDescription (Loc ["STRING_RAIDCHECK_PLUGIN_DESC"])
 
-	local version = "v2.0"
 	
 	local debugmode = false
 	--local debugmode = true
@@ -247,14 +248,15 @@ end
 		
 		--header and scroll
 		local headerTable = {
-			{text = "Player Name", width = 160},
-			{text = "Talents", width = 150},
-			{text = "Item Level", width = 70},
-			{text = "Food", width = 50},
-			{text = "Flask", width = 50},
-			{text = "Rune", width = 50},
+			{text = "Player Name", width = 140},
+			{text = "Talents", width = 130},
+			{text = "ILevel", width = 45},
+			{text = "Repair", width = 45},
+			{text = "Food", width = 45},
+			{text = "Flask", width = 45},
+			{text = "Rune", width = 45},
 			--{text = "Pre-Pot Last Try", width = 100},
-			{text = "Using Details!", width = 100},
+			--{text = "Using Details!", width = 100},
 		}
 		local headerOptions = {
 			padding = 2,
@@ -300,10 +302,14 @@ end
 			--spec icon
 			local specIcon = DF:CreateImage (line, nil, scroll_line_height, scroll_line_height)
 				specIcon:SetPoint ("left", roleIcon, "right", 2, 0)
+
+			--covenant icon
+			local covenantIcon = DF:CreateImage (line, nil, scroll_line_height, scroll_line_height)
+				covenantIcon:SetPoint ("left", specIcon, "right", 2, 0)
 				
 			--player name
 			local playerName = DF:CreateLabel (line)
-				playerName:SetPoint ("left", specIcon, "right", 2, 0)
+				playerName:SetPoint ("left", covenantIcon, "right", 2, 0)
 			
 			--talents
 			local talent_row_options = {
@@ -316,40 +322,44 @@ end
 			local talentsRow = DF:CreateIconRow (line, "$parentTalentIconsRow", talent_row_options)
 			
 			--item level
-			local itemLevel = DF:CreateLabel (line)
-			
+			local itemLevel = DF:CreateLabel(line)
+			--repair status
+			local repairStatus = DF:CreateLabel(line)
 			--no food
-			local FoodIndicator = DF:CreateImage (line, "", scroll_line_height, scroll_line_height)
+			local FoodIndicator = DF:CreateImage(line, "", scroll_line_height, scroll_line_height)
 			--no flask
-			local FlaskIndicator = DF:CreateImage (line, "", scroll_line_height, scroll_line_height)
+			local FlaskIndicator = DF:CreateImage(line, "", scroll_line_height, scroll_line_height)
 			--no rune
-			local RuneIndicator = DF:CreateImage (line, "", scroll_line_height, scroll_line_height)
+			local RuneIndicator = DF:CreateImage(line, "", scroll_line_height, scroll_line_height)
 			--no pre pot
 			--local PrePotIndicator = DF:CreateImage (line, "", scroll_line_height, scroll_line_height)
 			--using details!
-			local DetailsIndicator = DF:CreateImage (line, "", scroll_line_height, scroll_line_height)
+			--local DetailsIndicator = DF:CreateImage(line, "", scroll_line_height, scroll_line_height)
 			
-			line:AddFrameToHeaderAlignment (roleIcon)
-			line:AddFrameToHeaderAlignment (talentsRow)
-			line:AddFrameToHeaderAlignment (itemLevel)
-			line:AddFrameToHeaderAlignment (FoodIndicator)
-			line:AddFrameToHeaderAlignment (FlaskIndicator)
-			line:AddFrameToHeaderAlignment (RuneIndicator)
-			--line:AddFrameToHeaderAlignment (PrePotIndicator)
-			line:AddFrameToHeaderAlignment (DetailsIndicator)
+			line:AddFrameToHeaderAlignment(roleIcon)
+			line:AddFrameToHeaderAlignment(talentsRow)
+			line:AddFrameToHeaderAlignment(itemLevel)
+			line:AddFrameToHeaderAlignment(repairStatus)
+			line:AddFrameToHeaderAlignment(FoodIndicator)
+			line:AddFrameToHeaderAlignment(FlaskIndicator)
+			line:AddFrameToHeaderAlignment(RuneIndicator)
+			--line:AddFrameToHeaderAlignment(PrePotIndicator)
+			--line:AddFrameToHeaderAlignment(DetailsIndicator)
 			
 			line:AlignWithHeader (DetailsRaidCheck.Header, "left")
 			
+			line.CovenantIcon = covenantIcon
 			line.RoleIcon = roleIcon
 			line.SpecIcon = specIcon
 			line.PlayerName = playerName
 			line.TalentsRow = talentsRow
 			line.ItemLevel = itemLevel
+			line.RepairStatus = repairStatus
 			line.FoodIndicator = FoodIndicator
 			line.FlaskIndicator = FlaskIndicator
 			line.RuneIndicator = RuneIndicator
 			--line.PrePotIndicator = PrePotIndicator
-			line.DetailsIndicator = DetailsIndicator
+			--line.DetailsIndicator = DetailsIndicator
 			
 			return line
 		end
@@ -369,6 +379,11 @@ end
 			table.sort (dataInOrder, DF.SortOrder2)
 			--table.sort (dataInOrder, DF.SortOrder1R) --alphabetical
 			data = dataInOrder
+
+			local openRaidLib = LibStub:GetLibrary("LibOpenRaid-1.0")
+			--get the information of all players
+			local playersInfoData = openRaidLib.playerInfoManager.GetAllPlayersInfo()
+			local playersGearData = openRaidLib.gearManager.GetAllPlayersGear()
 		
 			for i = 1, total_lines do
 				local index = i + offset
@@ -378,17 +393,38 @@ end
 					local line = self:GetLine (i)
 					if (line) then
 						
-						local roleTexture, L, R, T, B = _detalhes:GetRoleIcon (playerTable.Role or "NONE")
+						local thisPlayerInfo = playersInfoData[playerTable.UnitNameRealm]
+						if (thisPlayerInfo) then
+							local playerCovenantId = thisPlayerInfo.covenantId
+							if (playerCovenantId > 0) then
+								line.CovenantIcon:SetTexture(LIB_OPEN_RAID_COVENANT_ICONS[playerCovenantId])
+								line.CovenantIcon:SetTexCoord(.05, .95, .05, .95)
+							else
+								line.CovenantIcon:SetTexture("")
+							end
+						else
+							line.CovenantIcon:SetTexture("")
+						end
+
+						--repair status
+						local thisPlayerGearInfo = playersGearData[playerTable.UnitNameRealm]
+						if (thisPlayerGearInfo) then
+							line.RepairStatus:SetText(thisPlayerGearInfo.durability .. "%")
+						else
+							line.RepairStatus:SetText("")
+						end
 						
-						line.RoleIcon:SetTexture (roleTexture)
-						line.RoleIcon:SetTexCoord (L, R, T, B)
+						local roleTexture, L, R, T, B = _detalhes:GetRoleIcon(playerTable.Role or "NONE")
+						
+						line.RoleIcon:SetTexture(roleTexture)
+						line.RoleIcon:SetTexCoord(L, R, T, B)
 						
 						if (playerTable.Spec) then
-							local texture, L, R, T, B = _detalhes:GetSpecIcon (playerTable.Spec)
-							line.SpecIcon:SetTexture (texture)
-							line.SpecIcon:SetTexCoord (L, R, T, B)
+							local texture, L, R, T, B = _detalhes:GetSpecIcon(playerTable.Spec)
+							line.SpecIcon:SetTexture(texture)
+							line.SpecIcon:SetTexCoord(L, R, T, B)
 						else
-							local texture, L, R, T, B = _detalhes:GetClassIcon (playerTable.Class)
+							local texture, L, R, T, B = _detalhes:GetClassIcon(playerTable.Class)
 							line.SpecIcon:SetTexture (texture)
 							line.SpecIcon:SetTexCoord (L, R, T, B)
 						end
@@ -398,8 +434,8 @@ end
 						if (playerTable.Talents) then
 							for i = 1, #playerTable.Talents do
 								local talent = playerTable.Talents [i]
-								local talentID, name, texture, selected, available = GetTalentInfoByID (talent)
-								line.TalentsRow:SetIcon (false, false, false, false, texture)
+								local talentID, name, texture, selected, available = GetTalentInfoByID(talent)
+								line.TalentsRow:SetIcon(false, false, false, false, texture)
 							end
 						end
 
@@ -428,7 +464,7 @@ end
 						line.FlaskIndicator.texture = playerTable.Flask and [[Interface\Scenarios\ScenarioIcon-Check]] or ""
 						line.RuneIndicator.texture = playerTable.Rune and [[Interface\Scenarios\ScenarioIcon-Check]] or ""
 						--line.PrePotIndicator.texture = playerTable.PrePot and [[Interface\Scenarios\ScenarioIcon-Check]] or ""
-						line.DetailsIndicator.texture = playerTable.UseDetails and [[Interface\Scenarios\ScenarioIcon-Check]] or ""
+						--line.DetailsIndicator.texture = playerTable.UseDetails and [[Interface\Scenarios\ScenarioIcon-Check]] or ""
 					end
 				end
 			end
@@ -579,6 +615,7 @@ end
 		end)
 
 		local update_panel = function (self, elapsed)
+			
 			show_panel.NextUpdate = show_panel.NextUpdate - elapsed
 			
 			if (show_panel.NextUpdate > 0) then
@@ -604,6 +641,7 @@ end
 			for i = 1, iterateAmount do
 				local unitID = groupTypeID .. i
 				local unitName = UnitName (unitID)
+				local unitNameWithRealm = GetUnitName(unitID, true)
 				local cleuName = _detalhes:GetCLName (unitID)
 				local unitSerial = UnitGUID (unitID)
 				local _, unitClass, unitClassID = UnitClass (unitID)
@@ -617,6 +655,7 @@ end
 				
 				tinsert (PlayerData, {unitName, unitClassID,
 					Name = unitName,
+					UnitNameRealm = unitNameWithRealm,
 					Class = unitClass,
 					Serial = unitSerial,
 					Role = unitRole,
@@ -646,9 +685,11 @@ end
 				local talentsTable = _detalhes:GetTalents (unitSerial)
 
 				unitClassID = ((unitClassID + 128) ^ 4) + tonumber (string.byte (unitName, 1) .. "" .. string.byte (unitName, 2))
-				
+				local unitNameWithRealm = GetUnitName(unitID, true)
+
 				tinsert (PlayerData, {unitName, unitClassID,
 					Name = unitName,
+					UnitNameRealm = unitNameWithRealm,
 					Class = unitClass,
 					Serial = unitSerial,
 					Role = unitRole,
@@ -674,7 +715,18 @@ end
 		DetailsRaidCheck.ToolbarButton:SetScript ("OnEnter", function (self)
 			show_panel:Show()
 			show_panel:ClearAllPoints()
-			show_panel:SetPoint ("bottom", DetailsRaidCheck.ToolbarButton, "top", 0, 10)
+
+			local bottomPosition = self:GetBottom()
+			local screenHeight = GetScreenHeight()
+
+			local positionHeightPercent = bottomPosition / screenHeight
+
+			if (positionHeightPercent > 0.7) then
+				show_panel:SetPoint("top", DetailsRaidCheck.ToolbarButton, "bottom", 0, -10)
+			else
+				show_panel:SetPoint("bottom", DetailsRaidCheck.ToolbarButton, "top", 0, 10)
+			end
+
 			show_panel.NextUpdate = UpdateSpeed
 			update_panel (show_panel, 1)
 			show_panel:SetScript ("OnUpdate", update_panel)
@@ -936,7 +988,7 @@ end
 					--make it load after the other plugins
 					C_Timer.After(1, function()
 						--> install
-						local install, saveddata, is_enabled = _G._detalhes:InstallPlugin ("TOOLBAR", Loc ["STRING_RAIDCHECK_PLUGIN_NAME"], [[Interface\Buttons\UI-CheckBox-Check]], DetailsRaidCheck, "DETAILS_PLUGIN_RAIDCHECK", MINIMAL_DETAILS_VERSION_REQUIRED, "Details! Team", version, default_settings)
+						local install, saveddata, is_enabled = _G._detalhes:InstallPlugin ("TOOLBAR", Loc ["STRING_RAIDCHECK_PLUGIN_NAME"], [[Interface\Buttons\UI-CheckBox-Check]], DetailsRaidCheck, "DETAILS_PLUGIN_RAIDCHECK", MINIMAL_DETAILS_VERSION_REQUIRED, "Terciob", version, default_settings)
 						if (type (install) == "table" and install.error) then
 							return print (install.error)
 						end

@@ -28,6 +28,7 @@ local _
 
 local AceLocale = LibStub ("AceLocale-3.0")
 local Loc = AceLocale:GetLocale ( "Details" )
+local Translit = LibStub ("LibTranslit-1.0")
 
 local gump = 			_detalhes.gump
 
@@ -115,6 +116,26 @@ function atributo_heal:NovaTabela (serial, nome, link)
 
 	return _new_healActor
 end
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--> npc healing taken
+
+--local npchealingtaken_tooltip_background = {value = 100, color = {0.1960, 0.1960, 0.1960, 0.9097}, texture = [[Interface\AddOns\Details\images\bar_background2]]}
+
+--tooltip function
+
+
+local function RefreshNpcHealingTakenBar(tabela, barra, instancia)
+	atributo_damage:UpdateNpcHealingTaken(tabela, tabela.minha_barra, barra.colocacao, instancia)
+end
+
+local on_switch_NHT_show = function(instance) --npc healing taken
+	instance:TrocaTabela(instance, true, 1, 8)
+	return true
+end
+
+--local NHT_search_code = [[]]
 
 
 function _detalhes.SortGroupHeal (container, keyName2)
@@ -429,7 +450,7 @@ function atributo_heal:RefreshWindow (instancia, tabela_do_combate, forcar, expo
 			row1.icone_classe:SetTexture (instancia.total_bar.icon)
 			row1.icone_classe:SetTexCoord (0.0625, 0.9375, 0.0625, 0.9375)
 			
-			gump:Fade (row1, "out")
+			Details.FadeHandler.Fader (row1, "out")
 			
 			if (following and myPos and myPos > instancia.rows_fit_in_window and instancia.barraS[2] < myPos) then
 				for i = instancia.barraS[1], iter_last-1, 1 do --> vai atualizar s� o range que esta sendo mostrado
@@ -499,18 +520,17 @@ function atributo_heal:RefreshWindow (instancia, tabela_do_combate, forcar, expo
 			row1.icone_classe:SetTexture (instancia.total_bar.icon)
 			row1.icone_classe:SetTexCoord (0.0625, 0.9375, 0.0625, 0.9375)
 			
-			gump:Fade (row1, "out")
+			Details.FadeHandler.Fader (row1, "out")
 			
 			if (following and myPos and myPos > instancia.rows_fit_in_window and instancia.barraS[2] < myPos) then
+				conteudo[myPos]:RefreshLine (instancia, barras_container, whichRowLine, myPos, total, sub_atributo, forcar, keyName, combat_time, percentage_type, use_animations, bars_show_data, bars_brackets, bars_separator) 
+				whichRowLine = whichRowLine+1
 				for i = iter_last-1, instancia.barraS[1], -1 do --> vai atualizar s� o range que esta sendo mostrado
 					if (conteudo[i]) then
 						conteudo[i]:RefreshLine (instancia, barras_container, whichRowLine, i, total, sub_atributo, forcar, keyName, combat_time, percentage_type, use_animations, bars_show_data, bars_brackets, bars_separator) 
 						whichRowLine = whichRowLine+1
 					end
 				end
-				
-				conteudo[myPos]:RefreshLine (instancia, barras_container, whichRowLine, myPos, total, sub_atributo, forcar, keyName, combat_time, percentage_type, use_animations, bars_show_data, bars_brackets, bars_separator) 
-				whichRowLine = whichRowLine+1
 			else
 				for i = iter_last, instancia.barraS[1], -1 do --> vai atualizar s� o range que esta sendo mostrado
 					if (conteudo[i]) then
@@ -521,15 +541,14 @@ function atributo_heal:RefreshWindow (instancia, tabela_do_combate, forcar, expo
 			end
 		else
 			if (following and myPos and myPos > instancia.rows_fit_in_window and instancia.barraS[2] < myPos) then
+				conteudo[myPos]:RefreshLine (instancia, barras_container, whichRowLine, myPos, total, sub_atributo, forcar, keyName, combat_time, percentage_type, use_animations, bars_show_data, bars_brackets, bars_separator) 
+				whichRowLine = whichRowLine+1
 				for i = instancia.barraS[2]-1, instancia.barraS[1], -1 do --> vai atualizar s� o range que esta sendo mostrado
 					if (conteudo[i]) then
 						conteudo[i]:RefreshLine (instancia, barras_container, whichRowLine, i, total, sub_atributo, forcar, keyName, combat_time, percentage_type, use_animations, bars_show_data, bars_brackets, bars_separator) 
 						whichRowLine = whichRowLine+1
 					end
 				end
-				
-				conteudo[myPos]:RefreshLine (instancia, barras_container, whichRowLine, myPos, total, sub_atributo, forcar, keyName, combat_time, percentage_type, use_animations, bars_show_data, bars_brackets, bars_separator) 
-				whichRowLine = whichRowLine+1
 			else
 				for i = instancia.barraS[2], instancia.barraS[1], -1 do --> vai atualizar s� o range que esta sendo mostrado
 					if (conteudo[i]) then
@@ -561,7 +580,7 @@ function atributo_heal:RefreshWindow (instancia, tabela_do_combate, forcar, expo
 	if (forcar) then
 		if (instancia.modo == 2) then --> group
 			for i = whichRowLine, instancia.rows_fit_in_window  do
-				gump:Fade (instancia.barras [i], "in", 0.3)
+				Details.FadeHandler.Fader (instancia.barras [i], "in", Details.fade_speed)
 			end
 		end
 	end
@@ -862,7 +881,7 @@ function atributo_heal:RefreshBarra2 (thisLine, instancia, tabela_anterior, forc
 			thisLine:SetValue (100)
 			
 			if (thisLine.hidden or thisLine.fading_in or thisLine.faded) then
-				gump:Fade (thisLine, "out")
+				Details.FadeHandler.Fader (thisLine, "out")
 			end
 			
 			return self:RefreshBarra (thisLine, instancia)
@@ -880,7 +899,7 @@ function atributo_heal:RefreshBarra2 (thisLine, instancia, tabela_anterior, forc
 				thisLine.animacao_ignorar = true
 			end
 			
-			gump:Fade (thisLine, "out")
+			Details.FadeHandler.Fader (thisLine, "out")
 			
 			if (instancia.row_info.texture_class_colors) then
 				thisLine.textura:SetVertexColor (actor_class_color_r, actor_class_color_g, actor_class_color_b)
@@ -1253,7 +1272,14 @@ function atributo_heal:ToolTip_HealingTaken (instancia, numero, barra, keydown)
 	local lineHeight = _detalhes.tooltip.line_height
 
 	for i = 1, _math_min (max, #meus_curadores) do
-		GameCooltip:AddLine (_detalhes:GetOnlyName (meus_curadores[i][1]), FormatTooltipNumber (_, meus_curadores[i][2]).." (".._cstr ("%.1f", (meus_curadores[i][2]/total_curado) * 100).."%)")
+
+		local onyName = _detalhes:GetOnlyName(meus_curadores[i][1])
+		--translate cyrillic alphabet to western alphabet by Vardex (https://github.com/Vardex May 22, 2019)
+		if (instancia.row_info.textL_translit_text) then
+			onyName = Translit:Transliterate(onyName, "!")
+		end
+
+		GameCooltip:AddLine (onyName, FormatTooltipNumber (_, meus_curadores[i][2]).." (".._cstr ("%.1f", (meus_curadores[i][2]/total_curado) * 100).."%)")
 		local classe = meus_curadores[i][3]
 		if (not classe) then
 			classe = "UNKNOW"
@@ -1354,6 +1380,12 @@ function atributo_heal:ToolTip_HealingDone (instancia, numero, barra, keydown)
 	ActorSkillsContainer = self.targets
 	for target_name, amount in _pairs (ActorSkillsContainer) do
 		if (amount > 0) then
+
+			--translate cyrillic alphabet to western alphabet by Vardex (https://github.com/Vardex May 22, 2019)
+			if (instancia.row_info.textL_translit_text) then
+				target_name = Translit:Transliterate(target_name, "!")
+			end
+
 			_table_insert (ActorHealingTargets, {target_name, amount, amount / ActorTotal * 100})
 		end
 	end
@@ -1573,7 +1605,6 @@ function atributo_heal:ToolTip_HealingDone (instancia, numero, barra, keydown)
 				GameCooltip:AddIcon ([[Interface\AddOns\Details\images\classes_small]], 1, 1, icon_size.W, icon_size.H, 0.25, 0.49609375, 0.75, 1)
 			end
 		end
-		
 	end
 	
 	--> ~Phases
@@ -1623,48 +1654,6 @@ function atributo_heal:ToolTip_HealingDone (instancia, numero, barra, keydown)
 			end
 		end
 	end
-	
-	--> absorbs vs heal
-	--[=[
-	if (instancia.sub_atributo == 1 or instancia.sub_atributo == 2) then
-		local total_healed = self.total - self.totalabsorb
-		local total_previned = self.totalabsorb
-		
-		local healed_percentage = total_healed / self.total * 100
-		local previned_percentage = total_previned / self.total * 100
-		
-		if (healed_percentage > 1 and previned_percentage > 1) then
-			GameCooltip:AddLine (_math_floor (healed_percentage).."%", _math_floor (previned_percentage).."%")
-			local r, g, b = _unpack (_detalhes.class_colors [self.classe])
-			background_heal_vs_absorbs.color[1] = r
-			background_heal_vs_absorbs.color[2] = g
-			background_heal_vs_absorbs.color[3] = b
-			background_heal_vs_absorbs.specialSpark = false
-			GameCooltip:AddStatusBar (healed_percentage, 1, r, g, b, .9, false, background_heal_vs_absorbs)
-			GameCooltip:AddIcon ([[Interface\ICONS\Ability_Priest_ReflectiveShield]], 1, 2, 14, 14, 0.0625, 0.9375, 0.0625, 0.9375)
-			GameCooltip:AddIcon ([[Interface\ICONS\Ability_Monk_ChiWave]], 1, 1, 14, 14, 0.9375, 0.0625, 0.0625, 0.9375)
-		end
-		
-	elseif (instancia.sub_atributo == 3) then
-		local total_healed = self.total
-		local total_overheal = self.totalover
-		local both = total_healed + total_overheal
-		
-		local healed_okey = total_healed / both * 100
-		local healed_disposed = total_overheal / both * 100
-		
-		if (healed_okey > 1 and healed_disposed > 1) then
-			GameCooltip:AddLine (_math_floor (healed_okey).."%", _math_floor (healed_disposed).."%")
-			background_heal_vs_absorbs.color[1] = 1
-			background_heal_vs_absorbs.color[2] = 0
-			background_heal_vs_absorbs.color[3] = 0
-			background_heal_vs_absorbs.specialSpark = false
-			GameCooltip:AddStatusBar (healed_okey, 1, 0, 1, 0, .9, false, background_heal_vs_absorbs)
-			GameCooltip:AddIcon ([[Interface\Scenarios\ScenarioIcon-Check]], 1, 1, 14, 14, 0, 1, 0, 1)
-			GameCooltip:AddIcon ([[Interface\Glues\LOGIN\Glues-CheckBox-Check]], 1, 2, 14, 14, 1, 0, 0, 1)
-		end
-	end
-	--]=]
 	
 	return true
 end
@@ -2211,7 +2200,6 @@ local absorbed_table = {c = {1, 1, 1, 0.4}, p = 0}
 local overhealing_table = {c = {0.5, 0.1, 0.1, 0.4}, p = 0}
 local anti_heal_table = {c = {0.5, 0.1, 0.1, 0.4}, p = 0}
 local normal_table = {c = {1, 1, 1, 0.4}, p = 0}
-local multistrike_table = {c = {1, 1, 1, 0.4}, p = 0}
 local critical_table = {c = {1, 1, 1, 0.4}, p = 0}
 
 local data_table = {}
@@ -2367,33 +2355,6 @@ function atributo_heal:MontaDetalhesHealingDone (spellid, barra)
 			t2[8] = esta_magia.c_amt .. " [|cFFC0C0C0".. _cstr ("%.1f", esta_magia.c_amt/total_hits*100) .. "%|r]"
 			
 		end
-		
-	--> MULTISTRIKE
-		--[=[
-		if (esta_magia.m_amt > 0) then
-		
-			local multistrike_hits = esta_magia.m_amt
-			local multistrike_heal = esta_magia.m_healed
-
-			local media_normal = multistrike_heal / multistrike_hits
-			local T = (meu_tempo * multistrike_heal) / esta_magia.total
-			local P = media / media_normal * 100
-			T = P * T / 100
-			
-			data[#data+1] = t3
-			multistrike_table.p = esta_magia.m_amt/total_hits*100
-		
-			t3[1] = multistrike_hits
-			t3[2] = multistrike_table
-			t3[3] = Loc ["STRING_MULTISTRIKE_HITS"]
-			t3[4] = "On Critical: " .. esta_magia.m_crit
-			t3[5] = "On Normals: " .. (esta_magia.m_amt - esta_magia.m_crit)
-			t3[6] = Loc ["STRING_AVERAGE"] .. ": " .. _detalhes:comma_value (multistrike_heal / multistrike_hits)
-			t3[7] = Loc ["STRING_HPS"] .. ": " .. _detalhes:comma_value (multistrike_heal / T)
-			t3[8] = multistrike_hits .. " [|cFFC0C0C0" .. _cstr ("%.1f", multistrike_hits / total_hits * 100) .. "%|r]"
-
-		end
-		--]=]
 	end
 
 	_table_sort (data, _detalhes.Sort1)

@@ -114,6 +114,8 @@
 		["target"] = true,
 		["script"] = true,
 		["tooltip"] = true,
+		["total_script"] = true,
+		["percent_script"] = true,
 	}
 	
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,7 +141,7 @@
 	function _detalhes:InitializeCustomDisplayWindow()
 		local DetailsCustomPanel = CreateFrame ("frame", "DetailsCustomPanel", UIParent,"BackdropTemplate")
 		DetailsCustomPanel.Frame = DetailsCustomPanel
-		DetailsCustomPanel.__name = "Custom Displays"
+		DetailsCustomPanel.__name = Loc ["STRING_SCRIPTS_TITLE"]
 		DetailsCustomPanel.real_name = "DETAILS_CUSTOMDISPLAY"
 		--DetailsCustomPanel.__icon = [[Interface\FriendsFrame\UI-FriendsList-Small-Up]]
 		DetailsCustomPanel.__icon = [[Interface\AddOns\Details\images\icons]]
@@ -156,7 +158,7 @@
 	
 		if (not _G.DetailsCustomPanel or not DetailsCustomPanel.Initialized) then
 		
-		DetailsPluginContainerWindow.OpenPlugin (DetailsCustomPanel)
+			DetailsPluginContainerWindow.OpenPlugin (DetailsCustomPanel)
 	
 			local GameCooltip = GameCooltip
 			DetailsCustomPanel.Initialized = true
@@ -212,12 +214,14 @@
 				f.Close = CreateFrame ("button", "$parentCloseButton", f)
 				f.Close:SetPoint ("right", titlebar, "right", -2, 0)
 				f.Close:SetSize (16, 16)
-				f.Close:SetNormalTexture (_detalhes.gump.folder .. "icons")
-				f.Close:SetHighlightTexture (_detalhes.gump.folder .. "icons")
-				f.Close:SetPushedTexture (_detalhes.gump.folder .. "icons")
-				f.Close:GetNormalTexture():SetTexCoord (0, 16/128, 0, 1)
-				f.Close:GetHighlightTexture():SetTexCoord (0, 16/128, 0, 1)
-				f.Close:GetPushedTexture():SetTexCoord (0, 16/128, 0, 1)
+
+				f.Close:SetNormalTexture ([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+				f.Close:SetHighlightTexture ([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+				f.Close:SetPushedTexture ([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+				f.Close:GetNormalTexture():SetDesaturated(true)
+				f.Close:GetHighlightTexture():SetDesaturated(true)
+				f.Close:GetPushedTexture():SetDesaturated(true)
+
 				f.Close:SetAlpha (0.7)
 				f.Close:SetScript ("OnClick", function() _detalhes:CloseCustomDisplayWindow() end)			
 				f.Close:SetScript ("OnHide", function()
@@ -810,7 +814,7 @@
 				for key, value in pairs (custom_object) do
 					if (object_keys [key]) then
 						if (type (value) == "table") then
-							export_object [key] = table_deepcopy (value)
+							export_object [key] = Details.CopyTable (value)
 						else
 							export_object [key] = value
 						end
@@ -1844,7 +1848,7 @@
 				apply1:SetPoint ("left", font_size2, "right", 2, 0)
 				apply1:SetTemplate (CONST_CODETEXTENTRYBUTTON_TEMPLATE)
 				
-				local open_API = gump:NewButton (supportFrame, nil, "$parentOpenAPI", "openAPIbutton", CONST_EDITBOX_BUTTON_WIDTH, CONST_EDITBOX_BUTTON_HEIGHT, _detalhes.OpenAPI, nil, nil, nil, "API")
+				local open_API = gump:NewButton (supportFrame, nil, "$parentOpenAPI", "openAPIbutton", CONST_EDITBOX_BUTTON_WIDTH, CONST_EDITBOX_BUTTON_HEIGHT, function()end, nil, nil, nil, "API") --_detalhes.OpenAPI - opening the api was cancelling the editing process
 				open_API:SetPoint ("left", apply1, "right", 2, 0)
 				open_API:SetTemplate (CONST_CODETEXTENTRYBUTTON_TEMPLATE)
 				

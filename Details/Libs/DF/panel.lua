@@ -14,6 +14,21 @@ local _type = type --> lua local
 local _math_floor = math.floor --> lua local
 local loadstring = loadstring --> lua local
 
+local IS_WOW_PROJECT_MAINLINE = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+local IS_WOW_PROJECT_NOT_MAINLINE = WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE
+local IS_WOW_PROJECT_CLASSIC_ERA = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC
+local IS_WOW_PROJECT_CLASSIC_TBC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC
+
+local UnitCastingInfo = UnitCastingInfo
+local UnitChannelInfo = UnitChannelInfo
+
+if IS_WOW_PROJECT_CLASSIC_ERA then
+    UnitCastingInfo = CastingInfo
+    UnitChannelInfo = ChannelInfo
+end
+
+local PixelUtil = PixelUtil or DFPixelUtil
+
 local UnitGroupRolesAssigned = DetailsFramework.UnitGroupRolesAssigned
 
 local cleanfunction = function() end
@@ -660,7 +675,7 @@ function DF:NewPanel (parent, container, name, member, w, h, backdrop, backdropc
 					["OnEnter"] = {0.3, 0.3, 0.3, 0.5},
 					["OnLeave"] = {0.9, 0.7, 0.7, 1}
 	}
-	PanelObject.frame:SetBackdrop ({bgFile = [[Interface\DialogFrame\UI-DialogBox-Background]], edgeFile = "Interface\DialogFrame\UI-DialogBox-Border", edgeSize = 10, tileSize = 64, tile = true})
+	PanelObject.frame:SetBackdrop ({bgFile = [[Interface\DialogFrame\UI-DialogBox-Background]], edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border", edgeSize = 10, tileSize = 64, tile = true})
 	
 	PanelObject.widget = PanelObject.frame
 	
@@ -737,8 +752,8 @@ local add_row = function (self, t, need_update)
 	local index = #self.rows+1
 	
 	local thisrow = DF:NewPanel (self, self, "$parentHeader_" .. self._name .. index, nil, 1, 20)
-	thisrow.backdrop = {bgFile = [[Interface\DialogFrame\UI-DialogBox-Gold-Background]]}
-	thisrow.color = "silver"
+	thisrow.backdrop = {bgFile = [[Interface\Tooltips\UI-Tooltip-Background]]}
+	thisrow.color = {.3, .3, .3, .9}
 	thisrow.type = t.type
 	thisrow.func = t.func
 	thisrow.name = t.name
@@ -772,7 +787,7 @@ local align_rows = function (self)
 		end
 	end
 
-	local cur_width = 0
+	local cur_width = 1
 	local row_width = self._width / max (rows_shown, 0.0001)
 	
 
@@ -788,11 +803,11 @@ local align_rows = function (self)
 				else
 					row.width = row_width
 				end
-				row:SetPoint ("topleft", self, "topleft", cur_width, 0)
+				row:SetPoint ("topleft", self, "topleft", cur_width, -1)
 				tinsert (self._anchors, cur_width)
 				cur_width = cur_width + row_width + 1
 			else
-				row:SetPoint ("topleft", self, "topleft", cur_width, 0)
+				row:SetPoint ("topleft", self, "topleft", cur_width, -1)
 				row.width = self._raw_rows [index].width
 				tinsert (self._anchors, cur_width)
 				cur_width = cur_width + self._raw_rows [index].width + 1
@@ -986,7 +1001,6 @@ local update_rows = function (self, updated_rows)
 			widget.text:SetText (t.name)
 			DF:SetFontSize (widget.text, raw.textsize or 10)
 			widget.text:SetJustifyH (raw.textalign or "left")
-			
 		end
 	end
 	
@@ -1570,7 +1584,7 @@ function DF:IconPick (callback, close_when_select, param1, param2)
 		DF.IconPickFrame.preview:Hide()
 		
 		--serach
-		DF.IconPickFrame.searchLabel =  DF:NewLabel (DF.IconPickFrame, nil, "$parentSearchBoxLabel", nil, "search:", font, size, color)
+		DF.IconPickFrame.searchLabel =  DF:NewLabel (DF.IconPickFrame, nil, "$parentSearchBoxLabel", nil, "search:")
 		DF.IconPickFrame.searchLabel:SetPoint ("topleft", DF.IconPickFrame, "topleft", 12, -36)
 		DF.IconPickFrame.searchLabel:SetTemplate (DF:GetTemplate ("font", "ORANGE_FONT_TEMPLATE"))
 		
@@ -1970,20 +1984,29 @@ local SimplePanel_frame_backdrop_border_color = {0, 0, 0, 1}
 --the slider was anchoring to with_label and here here were anchoring the slider again
 function DF:CreateScaleBar (frame, config)
 	local scaleBar, text = DF:CreateSlider (frame, 120, 14, 0.6, 1.6, 0.1, config.scale, true, "ScaleBar", nil, "Scale:", DF:GetTemplate ("slider", "OPTIONS_SLIDER_TEMPLATE"), DF:GetTemplate ("font", "ORANGE_FONT_TEMPLATE"))
-	--scaleBar:SetPoint ("right", frame.Close, "left", -26, 0)
+	scaleBar.thumb:SetWidth(24)
+	scaleBar:SetValueStep(0.1)
+	scaleBar:SetObeyStepOnDrag()
+	scaleBar.mouseDown = false
+
 	text:SetPoint ("topleft", frame, "topleft", 12, -7)
 	scaleBar:SetFrameLevel (DF.FRAMELEVEL_OVERLAY)
 	scaleBar.OnValueChanged = function (_, _, value)
-		config.scale = value
-		if (not scaleBar.IsValueChanging) then
-			frame:SetScale (config.scale)
+		if (scaleBar.mouseDown) then
+			config.scale = value
 		end
 	end
+
+	scaleBar:SetHook ("OnMouseDown", function()
+		scaleBar.mouseDown = true
+	end)
+
 	scaleBar:SetHook ("OnMouseUp", function()
-		frame:SetScale (config.scale)
+		frame:SetScale(config.scale)
+		scaleBar.mouseDown = false
 	end)
 	
-	scaleBar:SetAlpha (0.2)
+	scaleBar:SetAlpha (0.70)
 	
 	return scaleBar
 end
@@ -4016,8 +4039,21 @@ function DF:CreateTabContainer (parent, title, frame_name, frame_list, options_t
 	return mainFrame
 end
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- ~right ~click to ~close
 
+function DF:CreateRightClickToClose(parent, xOffset, yOffset, color, fontSize)
+	--default values
+	xOffset = xOffset or 0
+	yOffset = yOffset or 0
+	color = color or "white"
+	fontSize = fontSize or 10
 
+	local label = DF:CreateLabel(parent, "right click to close", fontSize, color)
+	label:SetPoint("bottomright", parent, "bottomright", -4 + xOffset, 5 + yOffset)
+
+	return label
+end
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -4311,6 +4347,10 @@ DF.ScrollBoxFunctions.GetData = function (self)
 end
 
 DF.ScrollBoxFunctions.GetFrames = function (self)
+	return self.Frames
+end
+
+DF.ScrollBoxFunctions.GetLines = function (self) --alias of GetFrames
 	return self.Frames
 end
 
@@ -5139,7 +5179,7 @@ DF.IconRowFunctions = {
 			newIconFrame.CountdownText:SetPoint (self.options.text_anchor or "center", newIconFrame, self.options.text_rel_anchor or "center", self.options.text_x_offset or 0, self.options.text_y_offset or 0)
 			newIconFrame.CountdownText:Hide()
 			
-			newIconFrame.StackText = cooldownFrame:CreateFontString (nil, "overlay", "GameFontNormal")
+			newIconFrame.StackText = newIconFrame:CreateFontString (nil, "overlay", "GameFontNormal")
 			--newIconFrame.StackText:SetPoint ("bottomright")
 			newIconFrame.StackText:SetPoint (self.options.stack_text_anchor or "center", newIconFrame, self.options.stack_text_rel_anchor or "bottomright", self.options.stack_text_x_offset or 0, self.options.stack_text_y_offset or 0)
 			newIconFrame.StackText:Hide()
@@ -6004,11 +6044,15 @@ local default_load_conditions_frame_options = {
 function DF:CreateLoadFilterParser (callback)
 	local f = CreateFrame ("frame")
 	f:RegisterEvent ("PLAYER_ENTERING_WORLD")
-	f:RegisterEvent ("PLAYER_SPECIALIZATION_CHANGED")
-	f:RegisterEvent ("PLAYER_TALENT_UPDATE")
+	if IS_WOW_PROJECT_MAINLINE then
+		f:RegisterEvent ("PLAYER_SPECIALIZATION_CHANGED")
+		f:RegisterEvent ("PLAYER_TALENT_UPDATE")
+	end
 	f:RegisterEvent ("PLAYER_ROLES_ASSIGNED")
 	f:RegisterEvent ("ZONE_CHANGED_NEW_AREA")
-	f:RegisterEvent ("CHALLENGE_MODE_START")
+	if IS_WOW_PROJECT_MAINLINE then
+		f:RegisterEvent ("CHALLENGE_MODE_START")
+	end
 	f:RegisterEvent ("ENCOUNTER_START")
 	f:RegisterEvent ("PLAYER_REGEN_ENABLED")
 	
@@ -6069,7 +6113,7 @@ function DF:PassLoadFilters (loadTable, encounterID)
 	end
 	
 	--spec
-	if (loadTable.spec.Enabled) then
+	if (IS_WOW_PROJECT_MAINLINE and loadTable.spec.Enabled) then
 		local canCheckTalents = true
 		
 		if (passLoadClass) then
@@ -6080,7 +6124,7 @@ function DF:PassLoadFilters (loadTable, encounterID)
 			canCheckTalents = false
 			
 			for _, specID in ipairs (specsForThisClass) do
-				if (loadTable.spec [specID]) then
+				if (loadTable.spec [specID] or loadTable.spec [specID..""]) then
 					--theres a talent for this class
 					canCheckTalents = true
 					break
@@ -6092,7 +6136,7 @@ function DF:PassLoadFilters (loadTable, encounterID)
 			local specIndex = DetailsFramework.GetSpecialization()
 			if (specIndex) then
 				local specID = DetailsFramework.GetSpecializationInfo (specIndex)
-				if (not loadTable.spec [specID]) then
+				if not specID or (not loadTable.spec [specID] and not loadTable.spec [specID..""]) then
 					return false
 				end
 			else
@@ -6110,11 +6154,11 @@ function DF:PassLoadFilters (loadTable, encounterID)
 	end
 	
 	--talents
-	if (loadTable.talent.Enabled) then
+	if (IS_WOW_PROJECT_MAINLINE and loadTable.talent.Enabled) then
 		local talentsInUse = DF:GetCharacterTalents (false, true)
 		local hasTalent
 		for talentID, _ in pairs (talentsInUse) do
-			if (loadTable.talent [talentID]) then
+			if talentID and (loadTable.talent [talentID] or loadTable.talent [talentID .. ""]) then
 				hasTalent =  true
 				break
 			end
@@ -6125,11 +6169,11 @@ function DF:PassLoadFilters (loadTable, encounterID)
 	end
 	
 	--pvptalent
-	if (loadTable.pvptalent.Enabled) then
+	if (IS_WOW_PROJECT_MAINLINE and loadTable.pvptalent.Enabled) then
 		local talentsInUse = DF:GetCharacterPvPTalents (false, true)
 		local hasTalent
 		for talentID, _ in pairs (talentsInUse) do
-			if (loadTable.pvptalent [talentID]) then
+			if talentID and (loadTable.pvptalent [talentID] or loadTable.pvptalent [talentID .. ""]) then
 				hasTalent =  true
 				break
 			end
@@ -6162,7 +6206,7 @@ function DF:PassLoadFilters (loadTable, encounterID)
 	end
 	
 	--affix
-	if (loadTable.affix.Enabled) then
+	if (IS_WOW_PROJECT_MAINLINE and loadTable.affix.Enabled) then
 		local isInMythicDungeon = C_ChallengeMode.IsChallengeModeActive()
 		if (not isInMythicDungeon) then
 			return false
@@ -6171,7 +6215,7 @@ function DF:PassLoadFilters (loadTable, encounterID)
 		local level, affixes, wasEnergized = C_ChallengeMode.GetActiveKeystoneInfo()
 		local hasAffix = false
 		for _, affixID in ipairs (affixes) do
-			if (loadTable.affix [affixID]) then
+			if affixID and (loadTable.affix [affixID] or loadTable.affix [affixID .. ""]) then
 				hasAffix = true
 				break
 			end
@@ -6188,7 +6232,7 @@ function DF:PassLoadFilters (loadTable, encounterID)
 			return
 		end
 		local hasEncounter
-		for _, ID in ipairs (loadTable.encounter_ids) do
+		for _, ID in pairs (loadTable.encounter_ids) do
 			if (ID == encounterID) then
 				hasEncounter = true
 				break
@@ -6205,7 +6249,7 @@ function DF:PassLoadFilters (loadTable, encounterID)
 		local uiMapID = C_Map.GetBestMapForUnit ("player")
 		
 		local hasMapID
-		for _, ID in ipairs (loadTable.map_ids) do
+		for _, ID in pairs (loadTable.map_ids) do
 			if (ID == zoneMapID or ID == uiMapID) then
 				hasMapID = true
 				break
@@ -6285,7 +6329,10 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 			f.OnRadioCheckboxClick = function (self, key, value)
 				--hierarchy: DBKey ["class"] key ["HUNTER"] value TRUE
 				local DBKey = self:GetParent().DBKey
-				f.OptionsTable [DBKey] [key] = value and true or nil
+				f.OptionsTable [DBKey] [key and key .. ""] = value and true or nil
+				if not value then -- cleanup "number" type values
+					f.OptionsTable [DBKey] [key] = nil
+				end
 				f.OnRadioStateChanged (self:GetParent(), f.OptionsTable [DBKey])
 				f.RunCallback()
 			end
@@ -6309,21 +6356,23 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 			tinsert (f.AllRadioGroups, classGroup)
 		
 		--create the radio group for character spec
-			local specs = {}
-			for _, specID in ipairs (DF:GetClassSpecIDs (select (2, UnitClass ("player")))) do
-				local specID, specName, specDescription, specIcon, specBackground, specRole, specClass = DetailsFramework.GetSpecializationInfoByID (specID)
-				tinsert (specs, {
-					name = specName,
-					set = f.OnRadioCheckboxClick,
-					param = specID,
-					get = function() return f.OptionsTable.spec [specID] end,
-					texture = specIcon,
-				})
+			if IS_WOW_PROJECT_MAINLINE then
+				local specs = {}
+				for _, specID in ipairs (DF:GetClassSpecIDs (select (2, UnitClass ("player")))) do
+					local specID, specName, specDescription, specIcon, specBackground, specRole, specClass = DetailsFramework.GetSpecializationInfoByID (specID)
+					tinsert (specs, {
+						name = specName,
+						set = f.OnRadioCheckboxClick,
+						param = specID,
+						get = function() return f.OptionsTable.spec [specID] or f.OptionsTable.spec [specID..""] end,
+						texture = specIcon,
+					})
+				end
+				local specGroup = DF:CreateRadionGroup (f, specs, name, {width = 200, height = 200, title = "Character Spec"}, {offset_x = 130, amount_per_line = 4})
+				specGroup:SetPoint ("topleft", f, "topleft", anchorPositions.spec [1], anchorPositions.spec [2])
+				specGroup.DBKey = "spec"
+				tinsert (f.AllRadioGroups, specGroup)
 			end
-			local specGroup = DF:CreateRadionGroup (f, specs, name, {width = 200, height = 200, title = "Character Spec"}, {offset_x = 130, amount_per_line = 4})
-			specGroup:SetPoint ("topleft", f, "topleft", anchorPositions.spec [1], anchorPositions.spec [2])
-			specGroup.DBKey = "spec"
-			tinsert (f.AllRadioGroups, specGroup)
 			
 		--create radio group for character races
 			local raceList = {}
@@ -6341,198 +6390,202 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 			tinsert (f.AllRadioGroups, raceGroup)
 			
 		--create radio group for talents
-			local talentList = {}
-			for _, talentTable in ipairs (DF:GetCharacterTalents()) do
-				tinsert (talentList, {
-					name = talentTable.Name, 
-					set = f.OnRadioCheckboxClick,
-					param = talentTable.ID,
-					get = function() return f.OptionsTable.talent [talentTable.ID] end,
-					texture = talentTable.Texture,
-				})
-			end
-			local talentGroup = DF:CreateRadionGroup (f, talentList, name, {width = 200, height = 200, title = "Characer Talents"}, {offset_x = 150, amount_per_line = 3})
-			talentGroup:SetPoint ("topleft", f, "topleft", anchorPositions.talent [1], anchorPositions.talent [2])
-			talentGroup.DBKey = "talent"
-			tinsert (f.AllRadioGroups, talentGroup)
-			f.TalentGroup = talentGroup
-			
-			do
-				--create a frame to show talents selected in other specs or characters
-				local otherTalents = CreateFrame ("frame", nil, f, "BackdropTemplate")
-				otherTalents:SetSize (26, 26)
-				otherTalents:SetPoint ("left", talentGroup.Title.widget, "right", 10, -2)
-				otherTalents.Texture = DF:CreateImage (otherTalents, [[Interface\BUTTONS\AdventureGuideMicrobuttonAlert]], 24, 24)
-				otherTalents.Texture:SetAllPoints()
-				
-				local removeTalent = function (_, _, talentID)
-					f.OptionsTable.talent [talentID] = nil
-					GameCooltip2:Hide()
-					f.OnRadioStateChanged (talentGroup, f.OptionsTable [talentGroup.DBKey])
-					f.CanShowTalentWarning()
+			if IS_WOW_PROJECT_MAINLINE then
+				local talentList = {}
+				for _, talentTable in ipairs (DF:GetCharacterTalents()) do
+					tinsert (talentList, {
+						name = talentTable.Name, 
+						set = f.OnRadioCheckboxClick,
+						param = talentTable.ID,
+						get = function() return f.OptionsTable.talent [talentTable.ID] or f.OptionsTable.talent [talentTable.ID .. ""] end,
+						texture = talentTable.Texture,
+					})
 				end
-				
-				local buildTalentMenu = function()
-					local playerTalents = DF:GetCharacterTalents()
-					local indexedTalents = {}
-					for _, talentTable in ipairs (playerTalents) do
-						tinsert (indexedTalents, talentTable.ID)
+				local talentGroup = DF:CreateRadionGroup (f, talentList, name, {width = 200, height = 200, title = "Characer Talents"}, {offset_x = 150, amount_per_line = 3})
+				talentGroup:SetPoint ("topleft", f, "topleft", anchorPositions.talent [1], anchorPositions.talent [2])
+				talentGroup.DBKey = "talent"
+				tinsert (f.AllRadioGroups, talentGroup)
+				f.TalentGroup = talentGroup
+			
+				do
+					--create a frame to show talents selected in other specs or characters
+					local otherTalents = CreateFrame ("frame", nil, f, "BackdropTemplate")
+					otherTalents:SetSize (26, 26)
+					otherTalents:SetPoint ("left", talentGroup.Title.widget, "right", 10, -2)
+					otherTalents.Texture = DF:CreateImage (otherTalents, [[Interface\BUTTONS\AdventureGuideMicrobuttonAlert]], 24, 24)
+					otherTalents.Texture:SetAllPoints()
+					
+					local removeTalent = function (_, _, talentID)
+						f.OptionsTable.talent [talentID] = nil
+						GameCooltip2:Hide()
+						f.OnRadioStateChanged (talentGroup, f.OptionsTable [talentGroup.DBKey])
+						f.CanShowTalentWarning()
 					end
 					
-					--talents selected to load
-					GameCooltip2:AddLine ("select a talent to remove it (added from a different spec or character)", "", 1, "orange", "orange", 9)
-					GameCooltip2:AddLine ("$div", nil, nil, -1, -1)
-					
-					for talentID, _ in pairs (f.OptionsTable.talent) do
-						if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
-							local talentID, name, texture, selected, available = GetTalentInfoByID (talentID)
-							if (name) then
-								GameCooltip2:AddLine (name)
-								GameCooltip2:AddIcon (texture, 1, 1, 16, 16, .1, .9, .1, .9)
-								GameCooltip2:AddMenu (1, removeTalent, talentID)
+					local buildTalentMenu = function()
+						local playerTalents = DF:GetCharacterTalents()
+						local indexedTalents = {}
+						for _, talentTable in ipairs (playerTalents) do
+							tinsert (indexedTalents, talentTable.ID)
+						end
+						
+						--talents selected to load
+						GameCooltip2:AddLine ("select a talent to remove it (added from a different spec or character)", "", 1, "orange", "orange", 9)
+						GameCooltip2:AddLine ("$div", nil, nil, -1, -1)
+						
+						for talentID, _ in pairs (f.OptionsTable.talent) do
+							if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
+								local talentID, name, texture, selected, available = GetTalentInfoByID (talentID)
+								if (name) then
+									GameCooltip2:AddLine (name)
+									GameCooltip2:AddIcon (texture, 1, 1, 16, 16, .1, .9, .1, .9)
+									GameCooltip2:AddMenu (1, removeTalent, talentID)
+								end
 							end
 						end
 					end
-				end
+					
+					otherTalents.CoolTip = {
+						Type = "menu",
+						BuildFunc = buildTalentMenu,
+						OnEnterFunc = function (self) end,
+						OnLeaveFunc = function (self) end,
+						FixedValue = "none",
+						ShowSpeed = 0.05,
+						Options = function()
+							GameCooltip2:SetOption ("TextFont", "Friz Quadrata TT")
+							GameCooltip2:SetOption ("TextColor", "orange")
+							GameCooltip2:SetOption ("TextSize", 12)
+							GameCooltip2:SetOption ("FixedWidth", 220)
+							GameCooltip2:SetOption ("ButtonsYMod", -4)
+							GameCooltip2:SetOption ("YSpacingMod", -4)
+							GameCooltip2:SetOption ("IgnoreButtonAutoHeight", true)
+							
+							GameCooltip2:SetColor (1, 0.5, 0.5, 0.5, 0)
+							
+							local preset2_backdrop = {bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], edgeFile = [[Interface\Buttons\WHITE8X8]], tile = true, edgeSize = 1, tileSize = 16, insets = {left = 0, right = 0, top = 0, bottom = 0}}
+							local gray_table = {0.37, 0.37, 0.37, 0.95}
+							local black_table = {0.2, 0.2, 0.2, 1}
+							GameCooltip2:SetBackdrop (1, preset2_backdrop, gray_table, black_table)
+							GameCooltip2:SetBackdrop (2, preset2_backdrop, gray_table, black_table)
+						end,
+					}
+					GameCooltip2:CoolTipInject (otherTalents)
 				
-				otherTalents.CoolTip = {
-					Type = "menu",
-					BuildFunc = buildTalentMenu,
-					OnEnterFunc = function (self) end,
-					OnLeaveFunc = function (self) end,
-					FixedValue = "none",
-					ShowSpeed = 0.05,
-					Options = function()
-						GameCooltip2:SetOption ("TextFont", "Friz Quadrata TT")
-						GameCooltip2:SetOption ("TextColor", "orange")
-						GameCooltip2:SetOption ("TextSize", 12)
-						GameCooltip2:SetOption ("FixedWidth", 220)
-						GameCooltip2:SetOption ("ButtonsYMod", -4)
-						GameCooltip2:SetOption ("YSpacingMod", -4)
-						GameCooltip2:SetOption ("IgnoreButtonAutoHeight", true)
-						
-						GameCooltip2:SetColor (1, 0.5, 0.5, 0.5, 0)
-						
-						local preset2_backdrop = {bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], edgeFile = [[Interface\Buttons\WHITE8X8]], tile = true, edgeSize = 1, tileSize = 16, insets = {left = 0, right = 0, top = 0, bottom = 0}}
-						local gray_table = {0.37, 0.37, 0.37, 0.95}
-						local black_table = {0.2, 0.2, 0.2, 1}
-						GameCooltip2:SetBackdrop (1, preset2_backdrop, gray_table, black_table)
-						GameCooltip2:SetBackdrop (2, preset2_backdrop, gray_table, black_table)
-					end,
-				}
-				GameCooltip2:CoolTipInject (otherTalents)
-			
-				function f.CanShowTalentWarning()
-					local playerTalents = DF:GetCharacterTalents()
-					local indexedTalents = {}
-					for _, talentTable in ipairs (playerTalents) do
-						tinsert (indexedTalents, talentTable.ID)
-					end
-					for talentID, _ in pairs (f.OptionsTable.talent) do
-						if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
-							otherTalents:Show()
-							return
+					function f.CanShowTalentWarning()
+						local playerTalents = DF:GetCharacterTalents()
+						local indexedTalents = {}
+						for _, talentTable in ipairs (playerTalents) do
+							tinsert (indexedTalents, talentTable.ID)
 						end
+						for talentID, _ in pairs (f.OptionsTable.talent) do
+							if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
+								otherTalents:Show()
+								return
+							end
+						end
+						otherTalents:Hide()
 					end
-					otherTalents:Hide()
 				end
 			end
 			
 		--create radio group for pvp talents
-			local pvpTalentList = {}
-			for _, talentTable in ipairs (DF:GetCharacterPvPTalents()) do
-				tinsert (pvpTalentList, {
-					name = talentTable.Name, 
-					set = f.OnRadioCheckboxClick,
-					param = talentTable.ID,
-					get = function() return f.OptionsTable.pvptalent [talentTable.ID] end,
-					texture = talentTable.Texture,
-				})
-			end
-			local pvpTalentGroup = DF:CreateRadionGroup (f, pvpTalentList, name, {width = 200, height = 200, title = "Characer PvP Talents"}, {offset_x = 150, amount_per_line = 3})
-			pvpTalentGroup:SetPoint ("topleft", f, "topleft", anchorPositions.pvptalent [1], anchorPositions.pvptalent [2])
-			pvpTalentGroup.DBKey = "pvptalent"
-			tinsert (f.AllRadioGroups, pvpTalentGroup)
-			f.PvPTalentGroup = pvpTalentGroup
-			
-			do
-				--create a frame to show talents selected in other specs or characters
-				local otherTalents = CreateFrame ("frame", nil, f, "BackdropTemplate")
-				otherTalents:SetSize (26, 26)
-				otherTalents:SetPoint ("left", pvpTalentGroup.Title.widget, "right", 10, -2)
-				otherTalents.Texture = DF:CreateImage (otherTalents, [[Interface\BUTTONS\AdventureGuideMicrobuttonAlert]], 24, 24)
-				otherTalents.Texture:SetAllPoints()
-				
-				local removeTalent = function (_, _, talentID)
-					f.OptionsTable.pvptalent [talentID] = nil
-					GameCooltip2:Hide()
-					f.OnRadioStateChanged (pvpTalentGroup, f.OptionsTable [pvpTalentGroup.DBKey])
-					f.CanShowPvPTalentWarning()
+			if IS_WOW_PROJECT_MAINLINE then
+				local pvpTalentList = {}
+				for _, talentTable in ipairs (DF:GetCharacterPvPTalents()) do
+					tinsert (pvpTalentList, {
+						name = talentTable.Name, 
+						set = f.OnRadioCheckboxClick,
+						param = talentTable.ID,
+						get = function() return f.OptionsTable.pvptalent [talentTable.ID] or f.OptionsTable.pvptalent [talentTable.ID .. ""] end,
+						texture = talentTable.Texture,
+					})
 				end
+				local pvpTalentGroup = DF:CreateRadionGroup (f, pvpTalentList, name, {width = 200, height = 200, title = "Characer PvP Talents"}, {offset_x = 150, amount_per_line = 3})
+				pvpTalentGroup:SetPoint ("topleft", f, "topleft", anchorPositions.pvptalent [1], anchorPositions.pvptalent [2])
+				pvpTalentGroup.DBKey = "pvptalent"
+				tinsert (f.AllRadioGroups, pvpTalentGroup)
+				f.PvPTalentGroup = pvpTalentGroup
 				
-				local buildTalentMenu = function()
-					local playerTalents = DF:GetCharacterPvPTalents()
-					local indexedTalents = {}
-					for _, talentTable in ipairs (playerTalents) do
-						tinsert (indexedTalents, talentTable.ID)
+				do
+					--create a frame to show talents selected in other specs or characters
+					local otherTalents = CreateFrame ("frame", nil, f, "BackdropTemplate")
+					otherTalents:SetSize (26, 26)
+					otherTalents:SetPoint ("left", pvpTalentGroup.Title.widget, "right", 10, -2)
+					otherTalents.Texture = DF:CreateImage (otherTalents, [[Interface\BUTTONS\AdventureGuideMicrobuttonAlert]], 24, 24)
+					otherTalents.Texture:SetAllPoints()
+					
+					local removeTalent = function (_, _, talentID)
+						f.OptionsTable.pvptalent [talentID] = nil
+						GameCooltip2:Hide()
+						f.OnRadioStateChanged (pvpTalentGroup, f.OptionsTable [pvpTalentGroup.DBKey])
+						f.CanShowPvPTalentWarning()
 					end
 					
-					--talents selected to load
-					GameCooltip2:AddLine ("select a talent to remove it (added from a different spec or character)", "", 1, "orange", "orange", 9)
-					GameCooltip2:AddLine ("$div", nil, nil, -1, -1)
-					
-					for talentID, _ in pairs (f.OptionsTable.pvptalent) do
-						if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
-							local _, name, texture = GetPvpTalentInfoByID (talentID)
-							if (name) then
-								GameCooltip2:AddLine (name)
-								GameCooltip2:AddIcon (texture, 1, 1, 16, 16, .1, .9, .1, .9)
-								GameCooltip2:AddMenu (1, removeTalent, talentID)
+					local buildTalentMenu = function()
+						local playerTalents = DF:GetCharacterPvPTalents()
+						local indexedTalents = {}
+						for _, talentTable in ipairs (playerTalents) do
+							tinsert (indexedTalents, talentTable.ID)
+						end
+						
+						--talents selected to load
+						GameCooltip2:AddLine ("select a talent to remove it (added from a different spec or character)", "", 1, "orange", "orange", 9)
+						GameCooltip2:AddLine ("$div", nil, nil, -1, -1)
+						
+						for talentID, _ in pairs (f.OptionsTable.pvptalent) do
+							if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
+								local _, name, texture = GetPvpTalentInfoByID (talentID)
+								if (name) then
+									GameCooltip2:AddLine (name)
+									GameCooltip2:AddIcon (texture, 1, 1, 16, 16, .1, .9, .1, .9)
+									GameCooltip2:AddMenu (1, removeTalent, talentID)
+								end
 							end
 						end
 					end
-				end
+					
+					otherTalents.CoolTip = {
+						Type = "menu",
+						BuildFunc = buildTalentMenu,
+						OnEnterFunc = function (self) end,
+						OnLeaveFunc = function (self) end,
+						FixedValue = "none",
+						ShowSpeed = 0.05,
+						Options = function()
+							GameCooltip2:SetOption ("TextFont", "Friz Quadrata TT")
+							GameCooltip2:SetOption ("TextColor", "orange")
+							GameCooltip2:SetOption ("TextSize", 12)
+							GameCooltip2:SetOption ("FixedWidth", 220)
+							GameCooltip2:SetOption ("ButtonsYMod", -4)
+							GameCooltip2:SetOption ("YSpacingMod", -4)
+							GameCooltip2:SetOption ("IgnoreButtonAutoHeight", true)
+							
+							GameCooltip2:SetColor (1, 0.5, 0.5, 0.5, 0)
+							
+							local preset2_backdrop = {edgeFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], tile = true, edgeSize = 1, tileSize = 16, insets = {left = 0, right = 0, top = 0, bottom = 0}}
+							local gray_table = {0.37, 0.37, 0.37, 0.95}
+							local black_table = {0.2, 0.2, 0.2, 1}
+							GameCooltip2:SetBackdrop (1, preset2_backdrop, gray_table, black_table)
+							GameCooltip2:SetBackdrop (2, preset2_backdrop, gray_table, black_table)
+						end,
+					}
+					GameCooltip2:CoolTipInject (otherTalents)
 				
-				otherTalents.CoolTip = {
-					Type = "menu",
-					BuildFunc = buildTalentMenu,
-					OnEnterFunc = function (self) end,
-					OnLeaveFunc = function (self) end,
-					FixedValue = "none",
-					ShowSpeed = 0.05,
-					Options = function()
-						GameCooltip2:SetOption ("TextFont", "Friz Quadrata TT")
-						GameCooltip2:SetOption ("TextColor", "orange")
-						GameCooltip2:SetOption ("TextSize", 12)
-						GameCooltip2:SetOption ("FixedWidth", 220)
-						GameCooltip2:SetOption ("ButtonsYMod", -4)
-						GameCooltip2:SetOption ("YSpacingMod", -4)
-						GameCooltip2:SetOption ("IgnoreButtonAutoHeight", true)
-						
-						GameCooltip2:SetColor (1, 0.5, 0.5, 0.5, 0)
-						
-						local preset2_backdrop = {edgeFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], tile = true, edgeSize = 1, tileSize = 16, insets = {left = 0, right = 0, top = 0, bottom = 0}}
-						local gray_table = {0.37, 0.37, 0.37, 0.95}
-						local black_table = {0.2, 0.2, 0.2, 1}
-						GameCooltip2:SetBackdrop (1, preset2_backdrop, gray_table, black_table)
-						GameCooltip2:SetBackdrop (2, preset2_backdrop, gray_table, black_table)
-					end,
-				}
-				GameCooltip2:CoolTipInject (otherTalents)
-			
-				function f.CanShowPvPTalentWarning()
-					local playerTalents = DF:GetCharacterPvPTalents()
-					local indexedTalents = {}
-					for _, talentTable in ipairs (playerTalents) do
-						tinsert (indexedTalents, talentTable.ID)
-					end
-					for talentID, _ in pairs (f.OptionsTable.pvptalent) do
-						if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
-							otherTalents:Show()
-							return
+					function f.CanShowPvPTalentWarning()
+						local playerTalents = DF:GetCharacterPvPTalents()
+						local indexedTalents = {}
+						for _, talentTable in ipairs (playerTalents) do
+							tinsert (indexedTalents, talentTable.ID)
 						end
+						for talentID, _ in pairs (f.OptionsTable.pvptalent) do
+							if (type (talentID) == "number" and not DF.table.find (indexedTalents, talentID)) then
+								otherTalents:Show()
+								return
+							end
+						end
+						otherTalents:Hide()
 					end
-					otherTalents:Hide()
 				end
 			end
 
@@ -6543,7 +6596,7 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 					name = groupTable.Name, 
 					set = f.OnRadioCheckboxClick,
 					param = groupTable.ID,
-					get = function() return f.OptionsTable.group [groupTable.ID] end,
+					get = function() return f.OptionsTable.group [groupTable.ID] or f.OptionsTable.group [groupTable.ID .. ""] end,
 				})
 			end
 			local groupTypesGroup = DF:CreateRadionGroup (f, groupTypes, name, {width = 200, height = 200, title = "Group Types"})
@@ -6558,7 +6611,7 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 					name = roleTable.Texture .. " " .. roleTable.Name, 
 					set = f.OnRadioCheckboxClick,
 					param = roleTable.ID,
-					get = function() return f.OptionsTable.role [roleTable.ID] end,
+					get = function() return f.OptionsTable.role [roleTable.ID] or f.OptionsTable.role [roleTable.ID .. ""] end,
 				})
 			end
 			local roleTypesGroup = DF:CreateRadionGroup (f, roleTypes, name, {width = 200, height = 200, title = "Role Types"})
@@ -6567,30 +6620,34 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 			tinsert (f.AllRadioGroups, roleTypesGroup)
 		
 		--create radio group for mythic+ affixes
-			local affixes = {}
-			for i = 2, 1000 do
-				local affixName, desc, texture = C_ChallengeMode.GetAffixInfo (i)
-				if (affixName) then
-					tinsert (affixes, {
-						name = affixName, 
-						set = f.OnRadioCheckboxClick,
-						param = i, 
-						get = function() return f.OptionsTable.affix [i] end,
-						texture = texture,
-					})
+			if IS_WOW_PROJECT_MAINLINE then
+				local affixes = {}
+				for i = 2, 1000 do
+					local affixName, desc, texture = C_ChallengeMode.GetAffixInfo (i)
+					if (affixName) then
+						tinsert (affixes, {
+							name = affixName, 
+							set = f.OnRadioCheckboxClick,
+							param = i, 
+							get = function() return f.OptionsTable.affix [i] or f.OptionsTable.affix [i .. ""] end,
+							texture = texture,
+						})
+					end
 				end
+				local affixTypesGroup = DF:CreateRadionGroup (f, affixes, name, {width = 200, height = 200, title = "M+ Affixes"})
+				affixTypesGroup:SetPoint ("topleft", f, "topleft", anchorPositions.affix [1], anchorPositions.affix [2])
+				affixTypesGroup.DBKey = "affix"
+				tinsert (f.AllRadioGroups, affixTypesGroup)
 			end
-			local affixTypesGroup = DF:CreateRadionGroup (f, affixes, name, {width = 200, height = 200, title = "M+ Affixes"})
-			affixTypesGroup:SetPoint ("topleft", f, "topleft", anchorPositions.affix [1], anchorPositions.affix [2])
-			affixTypesGroup.DBKey = "affix"
-			tinsert (f.AllRadioGroups, affixTypesGroup)
 		
 		--text entries functions
 			local textEntryRefresh = function (self)
 				local idList = f.OptionsTable [self.DBKey]
 				self:SetText ("")
-				for i = 1, #idList do 
-					self:SetText (self:GetText() .. " " .. idList [i])
+				for _, id in pairs(idList) do
+					if tonumber(id) then
+						self:SetText (self:GetText() .. " " .. id)
+					end
 				end
 				self:SetText (self:GetText():gsub ("^ ", ""))
 			end
@@ -6599,7 +6656,7 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 				wipe (f.OptionsTable [self.DBKey])
 				local text = self:GetText()
 				
-				for _, ID in ipairs ({strsplit ("", text)}) do
+				for _, ID in ipairs ({strsplit (" ", text)}) do
 					ID = DF:trim (ID)
 					ID = tonumber (ID)
 					if (ID) then
@@ -6616,7 +6673,7 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 			encounterIDEditbox:SetPoint ("topleft", encounterIDLabel, "bottomleft", 0, -2)
 			encounterIDEditbox.DBKey = "encounter_ids"
 			encounterIDEditbox.Refresh = textEntryRefresh
-			encounterIDEditbox.tooltip = "Enter multiple IDs separating with a semicolon ()\nExample: 35 45 95\n\nUldir:\n"
+			encounterIDEditbox.tooltip = "Enter multiple IDs separating with a whitespace.\nExample: 35 45 95\n\nSanctum of Domination:\n"
 			for _, encounterTable in ipairs (DF:GetCLEncounterIDs()) do
 				encounterIDEditbox.tooltip = encounterIDEditbox.tooltip .. encounterTable.ID .. " - " .. encounterTable.Name .. "\n"
 			end
@@ -6630,12 +6687,12 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 			mapIDEditbox:SetPoint ("topleft", mapIDLabel, "bottomleft", 0, -2)
 			mapIDEditbox.DBKey = "map_ids"
 			mapIDEditbox.Refresh = textEntryRefresh
-			mapIDEditbox.tooltip = "Enter multiple IDs separating with a semicolon ()\nExample: 35 45 95"
+			mapIDEditbox.tooltip = "Enter multiple IDs separating with a whitespace\nExample: 35 45 95"
 			mapIDEditbox:SetHook ("OnEnterPressed", textEntryOnEnterPressed)
 			tinsert (f.AllTextEntries, mapIDEditbox)
 
 		function f.Refresh (self)
-			do
+			if IS_WOW_PROJECT_MAINLINE then
 				--update the talents (might have changed if the player changed its specialization)
 				local talentList = {}
 				for _, talentTable in ipairs (DF:GetCharacterTalents()) do
@@ -6643,21 +6700,21 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 						name = talentTable.Name, 
 						set = DetailsFrameworkLoadConditionsPanel.OnRadioCheckboxClick,
 						param = talentTable.ID,
-						get = function() return DetailsFrameworkLoadConditionsPanel.OptionsTable.talent [talentTable.ID] end,
+						get = function() return DetailsFrameworkLoadConditionsPanel.OptionsTable.talent [talentTable.ID] or DetailsFrameworkLoadConditionsPanel.OptionsTable.talent [talentTable.ID .. ""] end,
 						texture = talentTable.Texture,
 					})
 				end
 				DetailsFrameworkLoadConditionsPanel.TalentGroup:SetOptions (talentList)
 			end
 			
-			do
+			if IS_WOW_PROJECT_MAINLINE then
 				local pvpTalentList = {}
 				for _, talentTable in ipairs (DF:GetCharacterPvPTalents()) do
 					tinsert (pvpTalentList, {
 						name = talentTable.Name, 
 						set = DetailsFrameworkLoadConditionsPanel.OnRadioCheckboxClick,
 						param = talentTable.ID,
-						get = function() return DetailsFrameworkLoadConditionsPanel.OptionsTable.pvptalent [talentTable.ID] end,
+						get = function() return DetailsFrameworkLoadConditionsPanel.OptionsTable.pvptalent [talentTable.ID] or DetailsFrameworkLoadConditionsPanel.OptionsTable.pvptalent [talentTable.ID .. ""] end,
 						texture = talentTable.Texture,
 					})
 				end
@@ -6675,8 +6732,10 @@ function DF:OpenLoadConditionsPanel (optionsTable, callback, frameOptions)
 				textEntry:Refresh()
 			end
 			
-			DetailsFrameworkLoadConditionsPanel.CanShowTalentWarning()
-			DetailsFrameworkLoadConditionsPanel.CanShowPvPTalentWarning()
+			if IS_WOW_PROJECT_MAINLINE then
+				DetailsFrameworkLoadConditionsPanel.CanShowTalentWarning()
+				DetailsFrameworkLoadConditionsPanel.CanShowPvPTalentWarning()
+			end
 		end
 			
 	end
@@ -6967,7 +7026,7 @@ end
 ]]
 
 function DF:BuildStatusbarAuthorInfo (f, addonBy, authorsNameString)
-	local authorName = DF:CreateLabel (f, "" .. (addonBy or "An addon by") .. "|cFFFFFFFF" .. (authorsNameString or "Terciob") .. "|r")
+	local authorName = DF:CreateLabel (f, "" .. (addonBy or "An addon by ") .. "|cFFFFFFFF" .. (authorsNameString or "Terciob") .. "|r")
 	authorName.textcolor = "silver"
 	local discordLabel = DF:CreateLabel (f, "Discord: ")
 	discordLabel.textcolor = "silver"
@@ -7186,15 +7245,15 @@ DF.StatusBarFunctions = {
 		Width = 100,
 		Height = 20,
 	}
-	
+
 	healthBarMetaFunctions.HealthBarEvents = {
 		{"PLAYER_ENTERING_WORLD"},
 		{"UNIT_HEALTH", true},
 		{"UNIT_MAXHEALTH", true},
-		--{"UNIT_HEALTH_FREQUENT", true},
+		{(IS_WOW_PROJECT_NOT_MAINLINE) and "UNIT_HEALTH_FREQUENT", true}, -- this one is classic-only...
 		{"UNIT_HEAL_PREDICTION", true},
-		{"UNIT_ABSORB_AMOUNT_CHANGED", true},
-		{"UNIT_HEAL_ABSORB_AMOUNT_CHANGED", true},
+		{(IS_WOW_PROJECT_MAINLINE) and "UNIT_ABSORB_AMOUNT_CHANGED", true},
+		{(IS_WOW_PROJECT_MAINLINE) and "UNIT_HEAL_ABSORB_AMOUNT_CHANGED", true},
 	}
 	
 	--> setup the castbar to be used by another unit
@@ -7212,22 +7271,28 @@ DF.StatusBarFunctions = {
 				for _, eventTable in ipairs (self.HealthBarEvents) do
 					local event = eventTable [1]
 					local isUnitEvent = eventTable [2]
-					if (isUnitEvent) then
-						self:RegisterUnitEvent (event, self.displayedUnit, self.unit)
-					else
-						self:RegisterEvent (event)
+					if event then
+						if (isUnitEvent) then
+							self:RegisterUnitEvent (event, self.displayedUnit, self.unit)
+						else
+							self:RegisterEvent (event)
+						end
 					end
 				end
 				
 				--> check for settings and update some events
 				if (not self.Settings.ShowHealingPrediction) then
 					self:UnregisterEvent ("UNIT_HEAL_PREDICTION")
-					self:UnregisterEvent ("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
+					if IS_WOW_PROJECT_MAINLINE then
+						self:UnregisterEvent ("UNIT_HEAL_ABSORB_AMOUNT_CHANGED")
+					end
 					self.incomingHealIndicator:Hide()
 					self.healAbsorbIndicator:Hide()
 				end
 				if (not self.Settings.ShowShields) then
-					self:UnregisterEvent ("UNIT_ABSORB_AMOUNT_CHANGED")
+					if IS_WOW_PROJECT_MAINLINE then
+						self:UnregisterEvent ("UNIT_ABSORB_AMOUNT_CHANGED")
+					end
 					self.shieldAbsorbIndicator:Hide()
 					self.shieldAbsorbGlow:Hide()
 				end
@@ -7244,7 +7309,9 @@ DF.StatusBarFunctions = {
 				--> remove all registered events
 				for _, eventTable in ipairs (self.HealthBarEvents) do
 					local event = eventTable [1]
-					self:UnregisterEvent (event)
+					if event then
+						self:UnregisterEvent (event)
+					end
 				end
 				
 				--> remove scripts
@@ -7331,7 +7398,7 @@ DF.StatusBarFunctions = {
 			--incoming heal on the unit from all sources
 			local unitHealIncoming = self.displayedUnit and UnitGetIncomingHeals (self.displayedUnit) or 0
 			--heal absorbs
-			local unitHealAbsorb = self.displayedUnit and UnitGetTotalHealAbsorbs (self.displayedUnit) or 0
+			local unitHealAbsorb = IS_WOW_PROJECT_MAINLINE and self.displayedUnit and UnitGetTotalHealAbsorbs (self.displayedUnit) or 0
 		
 			if (unitHealIncoming > 0) then
 				--calculate what is the percent of health incoming based on the max health the player has
@@ -7355,7 +7422,7 @@ DF.StatusBarFunctions = {
 			end
 		end
 		
-		if (self.Settings.ShowShields) then
+		if (self.Settings.ShowShields and IS_WOW_PROJECT_MAINLINE) then
 			--damage absorbs
 			local unitDamageAbsorb = self.displayedUnit and UnitGetTotalAbsorbs (self.displayedUnit) or 0
 		
@@ -7628,8 +7695,8 @@ DF.PowerFrameFunctions = {
 	end,
 	
 	--> when a event different from unit_power_update is triggered, update which type of power the unit should show
-	UpdatePowerInfo = function (self)
-		if (self.Settings.ShowAlternatePower) then
+	UpdatePowerInfo = function (self)		
+		if (IS_WOW_PROJECT_MAINLINE and self.Settings.ShowAlternatePower) then -- not available in classic
 			local barID = UnitPowerBarID(self.displayedUnit)
 			local barInfo = GetUnitPowerBarInfoByID(barID)
 			--local name, tooltip, cost = GetUnitPowerBarStringsByID(barID);
@@ -7771,8 +7838,8 @@ DF.CastFrameFunctions = {
 		{"UNIT_SPELLCAST_CHANNEL_START"},
 		{"UNIT_SPELLCAST_CHANNEL_UPDATE"},
 		{"UNIT_SPELLCAST_CHANNEL_STOP"},
-		{"UNIT_SPELLCAST_INTERRUPTIBLE"},
-		{"UNIT_SPELLCAST_NOT_INTERRUPTIBLE"},
+		{(IS_WOW_PROJECT_MAINLINE) and "UNIT_SPELLCAST_INTERRUPTIBLE"},
+		{(IS_WOW_PROJECT_MAINLINE) and "UNIT_SPELLCAST_NOT_INTERRUPTIBLE"},
 		{"PLAYER_ENTERING_WORLD"},
 		{"UNIT_SPELLCAST_START", true},
 		{"UNIT_SPELLCAST_STOP", true},
@@ -7972,10 +8039,12 @@ DF.CastFrameFunctions = {
 					local event = eventTable [1]
 					local isUnitEvent = eventTable [2]
 					
-					if (isUnitEvent) then
-						self:RegisterUnitEvent (event, unit)
-					else
-						self:RegisterEvent (event)
+					if event then
+						if (isUnitEvent) then
+							self:RegisterUnitEvent (event, unit)
+						else
+							self:RegisterEvent (event)
+						end
 					end
 				end
 				
@@ -8004,7 +8073,9 @@ DF.CastFrameFunctions = {
 			else
 				for _, eventTable in ipairs (self.CastBarEvents) do
 					local event = eventTable [1]
-					self:UnregisterEvent (event)
+					if event then
+						self:UnregisterEvent (event)
+					end
 				end
 				
 				--> register main events
@@ -8078,6 +8149,9 @@ DF.CastFrameFunctions = {
 			if (self.casting) then
 				local name, text, texture, startTime = UnitCastingInfo (self.unit)
 				if (name) then
+					--[[if not self.spellStartTime then
+						self:UpdateCastingInfo(self.unit)
+					end]]--
 					self.value = GetTime() - self.spellStartTime
 				end
 
@@ -8086,6 +8160,9 @@ DF.CastFrameFunctions = {
 			elseif (self.channeling) then
 				local name, text, texture, endTime = UnitChannelInfo (self.unit)
 				if (name) then
+					--[[if not self.spellEndTime then
+						self:UpdateChannelInfo(self.unit)
+					end]]--
 					self.value = self.spellEndTime - GetTime()
 				end
 
@@ -8279,10 +8356,12 @@ DF.CastFrameFunctions = {
 		
 		if (isChannel) then
 			self.channeling = true
+			self:UpdateChannelInfo(unit)
 			return self.unit == arg1 and "UNIT_SPELLCAST_CHANNEL_START"
 			
 		elseif (isRegularCast) then
 			self.casting = true
+			self:UpdateCastingInfo(unit)
 			return self.unit == arg1 and "UNIT_SPELLCAST_START"
 			
 		else
@@ -8296,9 +8375,14 @@ DF.CastFrameFunctions = {
 		end
 	end,
 	
-	UNIT_SPELLCAST_START = function (self, unit)
-
-		local name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo (unit)
+	UpdateCastingInfo = function (self, unit)
+		local name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID
+		if not IS_WOW_PROJECT_CLASSIC_TBC then
+			name, text, texture, startTime, endTime, isTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo (unit)
+		else
+			name, text, texture, startTime, endTime, isTradeSkill, castID, spellID = UnitCastingInfo (unit)
+			notInterruptible = false
+		end
 		
 		--> is valid?
 		if (not self:IsValid (unit, name, isTradeSkill, true)) then
@@ -8350,11 +8434,22 @@ DF.CastFrameFunctions = {
 		--> update the interrupt cast border
 		self:UpdateInterruptState()
 		
+	end,
+	
+	UNIT_SPELLCAST_START = function (self, unit)
+
+		self:UpdateCastingInfo(unit)
+		
 		self:RunHooksForWidget ("OnCastStart", self, self.unit, "UNIT_SPELLCAST_START")
 	end,
 	
-	UNIT_SPELLCAST_CHANNEL_START = function (self, unit, ...)
-		local name, text, texture, startTime, endTime, isTradeSkill, notInterruptible, spellID = UnitChannelInfo (unit)
+	UpdateChannelInfo = function (self, unit, ...)
+		local name, text, texture, startTime, endTime, isTradeSkill, notInterruptible, spellID
+		if not IS_WOW_PROJECT_CLASSIC_TBC then
+			name, text, texture, startTime, endTime, isTradeSkill, notInterruptible, spellID = UnitChannelInfo (unit)
+		else
+			name, text, texture, startTime, endTime, isTradeSkill, spellID = UnitChannelInfo (unit)
+		end
 
 		--> is valid?
 		if (not self:IsValid (unit, name, isTradeSkill, true)) then
@@ -8406,6 +8501,12 @@ DF.CastFrameFunctions = {
 			
 		--> update the interrupt cast border
 		self:UpdateInterruptState()
+		
+	end,
+	
+	UNIT_SPELLCAST_CHANNEL_START = function (self, unit, ...)
+		
+		self:UpdateChannelInfo(unit, ...)
 
 		self:RunHooksForWidget ("OnCastStart", self, self.unit, "UNIT_SPELLCAST_CHANNEL_START")
 	end,
@@ -8476,7 +8577,7 @@ DF.CastFrameFunctions = {
 	UNIT_SPELLCAST_FAILED = function (self, unit, ...)
 		local unitID, castID, spellID = ...
 	
-		if (self.casting and castID == self.castID and not self.fadeOut) then
+		if ((self.casting or self.channeling) and castID == self.castID and not self.fadeOut) then
 			self.casting = nil
 			self.channeling = nil
 			self.failed = true
@@ -8497,7 +8598,7 @@ DF.CastFrameFunctions = {
 	UNIT_SPELLCAST_INTERRUPTED = function (self, unit, ...)
 		local unitID, castID, spellID = ...
 
-		if (self.casting and castID == self.castID and not self.fadeOut) then
+		if ((self.casting or self.channeling) and castID == self.castID and not self.fadeOut) then
 			self.casting = nil
 			self.channeling = nil
 			self.interrupted = true
@@ -8566,6 +8667,90 @@ DF.CastFrameFunctions = {
 	end,
 
 }
+
+-- for classic era use LibClassicCasterino:
+local LibCC = LibStub ("LibClassicCasterino", true)
+if IS_WOW_PROJECT_CLASSIC_ERA and LibCC then
+	local fCast = CreateFrame("frame")
+
+	local getCastBar = function (unitId)
+		local plateFrame = C_NamePlate.GetNamePlateForUnit (unitId)
+		if (not plateFrame) then
+			return
+		end
+
+		local castBar = plateFrame.unitFrame and plateFrame.unitFrame.castBar
+		if (not castBar) then
+			return
+		end
+
+		return castBar
+	end
+
+	local triggerCastEvent = function (castBar, event, unitId, ...)
+		if (castBar and castBar.OnEvent) then
+			castBar.OnEvent (castBar, event, unitId)
+		end
+	end
+
+	local funcCast = function (event, unitId, ...)
+		local castBar = getCastBar (unitId)
+		if (castBar) then
+			triggerCastEvent (castBar, event, unitId)
+		end
+	end
+
+	fCast.UNIT_SPELLCAST_START = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	fCast.UNIT_SPELLCAST_STOP = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	fCast.UNIT_SPELLCAST_DELAYED = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	fCast.UNIT_SPELLCAST_FAILED = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	fCast.UNIT_SPELLCAST_INTERRUPTED = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	fCast.UNIT_SPELLCAST_CHANNEL_START = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	fCast.UNIT_SPELLCAST_CHANNEL_UPDATE = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	fCast.UNIT_SPELLCAST_CHANNEL_STOP = function (self, event, unitId, ...)
+		triggerCastEvent (getCastBar (unitId), event, unitId)
+	end
+
+	if LibCC then
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_START", funcCast)
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_DELAYED", funcCast) -- only for player
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_STOP", funcCast)
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_FAILED", funcCast)
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_INTERRUPTED", funcCast)
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_CHANNEL_START", funcCast)
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_CHANNEL_UPDATE", funcCast) -- only for player
+		LibCC.RegisterCallback(fCast,"UNIT_SPELLCAST_CHANNEL_STOP", funcCast)
+
+		UnitCastingInfo = function(unit)
+			return LibCC:UnitCastingInfo (unit)
+		end	
+
+		UnitChannelInfo = function(unit)
+			return LibCC:UnitChannelInfo (unit)
+		end	
+	end
+end -- end classic era
 
 -- ~castbar
 
@@ -8961,7 +9146,7 @@ end
 		--> todo: see what 'UnitTargetsVehicleInRaidUI' is, there's a call for this in the CompactUnitFrame.lua but zero documentation
 		CheckVehiclePossession = function (self)
 			--> this unit is possessing a vehicle?
-			local unitPossessVehicle = UnitHasVehicleUI (self.unit)			
+			local unitPossessVehicle = (IS_WOW_PROJECT_MAINLINE) and UnitHasVehicleUI (self.unit)	or false
 			if (unitPossessVehicle) then
 				if (not self.unitInVehicle) then
 					if (UnitIsUnit ("player", self.unit)) then
@@ -9191,6 +9376,7 @@ end
 	}
 
 -- ~unitframe
+local globalBaseFrameLevel = 1 -- to be increased + used across each new plate
 function DF:CreateUnitFrame (parent, name, unitFrameSettingsOverride, healthBarSettingsOverride, castBarSettingsOverride, powerBarSettingsOverride)
 	
 	local parentName = name or ("DetailsFrameworkUnitFrame" .. tostring (math.random (1, 100000000)))
@@ -9199,7 +9385,11 @@ function DF:CreateUnitFrame (parent, name, unitFrameSettingsOverride, healthBarS
 	local f = CreateFrame ("button", parentName, parent, "BackdropTemplate")
 	
 	--> base level
-	local baseFrameLevel = f:GetFrameLevel()
+	--local baseFrameLevel = f:GetFrameLevel()
+	local baseFrameLevel = globalBaseFrameLevel
+	globalBaseFrameLevel = globalBaseFrameLevel + 50
+	
+	f:SetFrameLevel (baseFrameLevel)
 	
 	--> create the healthBar
 	local healthBar = DF:CreateHealthBar (f, false, healthBarSettingsOverride)
@@ -9223,7 +9413,7 @@ function DF:CreateUnitFrame (parent, name, unitFrameSettingsOverride, healthBarS
 	
 	--> overlay frame (widgets that need to stay above the unit frame)
 	local overlayFrame = CreateFrame ("frame", "$parentOverlayFrame", f, "BackdropTemplate")
-	borderFrame:SetFrameLevel (f:GetFrameLevel() + 6)
+	overlayFrame:SetFrameLevel (f:GetFrameLevel() + 6)
 	f.overlayFrame = overlayFrame
 	
 	--> unit frame layers
@@ -10026,4 +10216,237 @@ function DF:SetPointOffsets(frame, xOffset, yOffset)
 		frame:SetPoint(anchor1, anchorTo, anchor2, xOffset, yOffset)
 	end
 end
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--> list box
+
+DF.ListboxFunctions = {
+	scrollRefresh = function(self, data, offset, totalLines)
+		for i = 1, totalLines do
+			local index = i + offset
+			local lineData = data[index] --what is shown in the textentries, array
+
+			if (lineData) then
+				local line = self:GetLine(i)
+				line.dataIndex = index
+				line.deleteButton:SetClickFunction(DF.ListboxFunctions.deleteEntry, data, index)
+				line.indexText:SetText(index)
+
+				local amountEntries = #lineData
+				for o = 1, amountEntries do
+					--data
+					local textEntry = line.widgets[o]
+					textEntry.dataTable = lineData
+					textEntry.dataTableIndex = o
+					local text = lineData[o]
+					textEntry:SetText(text)
+				end
+			end
+		end
+	end,
+
+	addEntry = function(self)
+		local frameCanvas = self:GetParent()
+		local data = frameCanvas.data
+		local newEntry = {}
+		for i = 1, frameCanvas.headerLength do
+			tinsert(newEntry, "")
+		end
+		tinsert(data, newEntry)
+		frameCanvas.scrollBox:Refresh()
+	end,
+
+	deleteEntry = function(self, button, data, index)
+		tremove(data, index)
+		--get the line, get the scrollframe
+		self:GetParent():GetParent():Refresh()
+	end,
+
+	createScrollLine = function(self, index)
+		local listBox = self:GetParent()
+		local line = CreateFrame("frame", self:GetName().. "line_" .. index, self, "BackdropTemplate")
+
+		line:SetPoint("topleft", self, "topleft", 1, -((index-1)*(self.lineHeight+1)) - 1)
+		line:SetSize(self:GetWidth() - 28, self.lineHeight) -- -28 space for the scrollbar
+
+		local options = listBox.options
+		line:SetBackdrop(options.line_backdrop)
+		line:SetBackdropColor(unpack(options.line_backdrop_color))
+		line:SetBackdropBorderColor(unpack(options.line_backdrop_border_color))
+
+		DF:Mixin(line, DF.HeaderFunctions)
+
+		line.widgets = {}
+
+		for i = 1, (listBox.headerLength+2) do --+2 to add the delete button and index
+			local headerColumn = listBox.headerTable[i]
+
+			if (headerColumn.isDelete) then
+				local deleteButton = DF:CreateButton(line, DF.ListboxFunctions.deleteEntry, 20, self.lineHeight, "X", listBox.data, index, nil, nil, nil, nil, DF:GetTemplate ("button", "OPTIONS_BUTTON_TEMPLATE"), DF:GetTemplate ("font", "ORANGE_FONT_TEMPLATE"))
+				line.deleteButton = deleteButton
+				line:AddFrameToHeaderAlignment(deleteButton)
+
+			elseif (headerColumn.isIndex) then
+				local indexText = DF:CreateLabel(line)
+				line.indexText = indexText
+				line:AddFrameToHeaderAlignment(indexText)
+
+			elseif (headerColumn.text) then
+				local template = DF.table.copy({}, DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"))
+				template.backdropcolor = {.1, .1, .1, .7}
+				template.backdropbordercolor = {.2, .2, .2, .6}
+
+				local textEntry = DF:CreateTextEntry(line, function()end, headerColumn.width, self.lineHeight, nil, nil, nil, template)
+				textEntry:SetHook("OnEditFocusGained", function() textEntry:HighlightText(0) end)
+				textEntry:SetHook("OnEditFocusLost", function()
+					textEntry:HighlightText(0, 0)
+					local text = textEntry.text
+					local dataTable = textEntry.dataTable
+					dataTable[textEntry.dataTableIndex] = text
+				end)
+				tinsert(line.widgets, textEntry)
+				line:AddFrameToHeaderAlignment(textEntry)
+			end
+		end
+
+		line:AlignWithHeader(listBox.header, "left")
+		return line
+	end,
+
+	SetData = function(frameCanvas, newData)
+		if (type(newData) ~= "table") then
+			error("ListBox:SetData received an invalid newData on parameter 2.")
+			return
+		end
+
+		frameCanvas.data = newData
+		frameCanvas.scrollBox:SetData(newData)
+		frameCanvas.scrollBox:Refresh()
+	end,
+}
+
+local listbox_options = {
+	width = 800,
+	height = 600,
+	auto_width = true,
+	line_height = 16,
+	line_backdrop = {bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tileSize = 64, tile = true},
+	line_backdrop_color = {.1, .1, .1, .6},
+	line_backdrop_border_color = {0, 0, 0, .5},
+}
+
+--@parent: parent frame
+--@name: name of the frame to be created
+--@data: table with current data to fill the column, this table are also used for values changed or added
+--@options: table with options to overwrite the default setting from 'listbox_options'
+--@header: a table to create a header widget
+--@header_options: a table with options to overwrite the default header options
+function DF:CreateListBox(parent, name, data, options, headerTable, headerOptions)
+
+	options = options or {}
+	name = name or "ListboxUnamed_" .. (math.random(100000, 1000000))
+
+	--canvas
+	local frameCanvas = CreateFrame("scrollframe", name, parent, "BackdropTemplate")
+	DF:Mixin(frameCanvas, DF.ListboxFunctions)
+	DF:Mixin(frameCanvas, DF.OptionsFunctions)
+	DF:Mixin(frameCanvas, DF.LayoutFrame)
+	frameCanvas.headerTable = headerTable
+
+	if (not data or type(data) ~= "table") then
+		error("CreateListBox() parameter 3 'data' must be a table.")
+	end
+
+	frameCanvas.data = data
+	frameCanvas.lines = {}
+	DF:ApplyStandardBackdrop(frameCanvas)
+	frameCanvas:BuildOptionsTable(listbox_options, options)
+
+	--> header
+		--check for default values in the header
+		headerTable = headerTable or {
+			{text = "Spell Id", width = 70},
+			{text = "Spell Name", width = 70},
+		}
+		headerOptions = headerOptions or {
+			padding = 2,
+		}
+
+		--each header is an entry in the data, if the header has 4 indexes the data has sub tables with 4 indexes as well
+		frameCanvas.headerLength = #headerTable
+
+		--add the detele line column into the header frame
+		tinsert(headerTable, 1, {text = "#", width = 20, isIndex = true}) --isDelete signals the createScrollLine() to make the delete button for the line 
+		tinsert(headerTable, {text = "Delete", width = 50, isDelete = true}) --isDelete signals the createScrollLine() to make the delete button for the line 
+		
+		local header = DF:CreateHeader(frameCanvas, headerTable, headerOptions)
+		--set the header point
+		header:SetPoint("topleft", frameCanvas, "topleft", 5, -5)
+		frameCanvas.header = header
+
+	--> auto size
+		if (frameCanvas.options.auto_width) then
+			local width = 10 --padding 5 on each side
+			width = width + 20 --scrollbar reserved space
+			local headerPadding = headerOptions.padding or 0
+
+			for _, header in pairs(headerTable) do
+				if (header.width) then
+					width = width + header.width + headerPadding
+				end
+			end
+
+			frameCanvas.options.width = width
+			frameCanvas:SetWidth(width)
+		end
+
+		local width = frameCanvas.options.width
+		local height = frameCanvas.options.height
+
+		frameCanvas:SetSize(frameCanvas.options.width, height)
+
+	--> scroll frame
+		local lineHeight = frameCanvas.options.line_height
+		--calc the size of the space occupied by the add button, header etc
+		local lineAmount = floor((height - 60) / lineHeight)
+
+		-- -12 is padding: 5 on top, 7 bottom, 2 header scrollbar blank space | -24 to leave space to the add button
+		local scrollBox = DF:CreateScrollBox(frameCanvas, "$parentScrollbox", frameCanvas.scrollRefresh, data, width-4, height - header:GetHeight() - 12 - 24, lineAmount, lineHeight)
+		scrollBox:SetPoint("topleft", header, "bottomleft", 0, -2)
+		scrollBox:SetPoint("topright", header, "bottomright", 0, -2) -- -20 for the scrollbar
+		DF:ReskinSlider(scrollBox)
+		scrollBox.lineHeight = lineHeight
+		scrollBox.lineAmount = lineAmount
+		frameCanvas.scrollBox = scrollBox
+
+		for i = 1, lineAmount do
+			scrollBox:CreateLine(frameCanvas.createScrollLine)
+		end
+
+		scrollBox:Refresh()
+
+	--> add line button
+		local addLineButton = DF:CreateButton(frameCanvas, DF.ListboxFunctions.addEntry, 80, 20, "Add", nil, nil, nil, nil, nil, nil, DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"), DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
+		addLineButton:SetPoint("topleft", scrollBox, "bottomleft", 0, -4)
+
+	return frameCanvas
+end
+
+--[=[ -- test case
+
+    local pframe = ListBoxTest or CreateFrame("frame", "ListBoxTest", UIParent)
+    pframe:SetSize(900, 700)
+    pframe:SetPoint("left")
+    
+    local data = {{254154, "spell name 1", 45}, {299154, "spell name 2", 05}, {354154, "spell name 3", 99}}
+    local headerTable = {
+        {text = "spell id", width = 120},
+        {text = "spell name", width = 180},
+        {text = "number", width = 90},
+    }
+    
+    local listbox = DetailsFramework:CreateListBox(pframe, "$parentlistbox", data, nil, headerTable, nil)
+    listbox:SetPoint("topleft", pframe, "topleft", 10, -10)
+
+--]=]
 

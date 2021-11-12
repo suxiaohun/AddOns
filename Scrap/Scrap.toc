@@ -1,4 +1,4 @@
-## Interface: 90002
+## Interface: 90105
 ## Title: Scrap
 ## Notes: Sells all your junk at the merchant.
 

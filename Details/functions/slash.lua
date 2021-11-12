@@ -2,6 +2,7 @@
 
 local _detalhes	= 	_G._detalhes
 local Loc = LibStub ("AceLocale-3.0"):GetLocale ( "Details" )
+local _
 
 local CreateFrame = CreateFrame
 local pairs = pairs 
@@ -383,7 +384,7 @@ function SlashCmdList.DETAILS (msg, editbox)
 		
 		_detalhes.tabela_historico:adicionar (combat)
 	
-		_detalhes:InstanciaCallFunction (_detalhes.gump.Fade, "in", nil, "barras")
+		_detalhes:InstanciaCallFunction (Details.FadeHandler.Fader, "in", nil, "barras")
 		_detalhes:InstanciaCallFunction (_detalhes.AtualizaSegmentos) -- atualiza o instancia.showing para as novas tabelas criadas
 		_detalhes:InstanciaCallFunction (_detalhes.AtualizaSoloMode_AfertReset) -- verifica se precisa zerar as tabela da janela solo mode
 		_detalhes:InstanciaCallFunction (_detalhes.ResetaGump) --_detalhes:ResetaGump ("de todas as instancias")
@@ -553,11 +554,11 @@ function SlashCmdList.DETAILS (msg, editbox)
 		
 		_detalhes.ResetButton:SetBackdropColor (0, 0, 1, 1)
 		
-		--vardump (_detalhes.ResetButton)
+		--Details.VarDump (_detalhes.ResetButton)
 	
 	elseif (command == "mini") then
 		local instance = _detalhes.tabela_instancias [1]
-		--vardump ()
+		--Details.VarDump ()
 		--print (instance, instance.StatusBar.options, instance.StatusBar.left)
 		print (instance.StatusBar.options [instance.StatusBar.left.mainPlugin.real_name].textSize)
 		print (instance.StatusBar.left.options.textSize)
@@ -693,8 +694,8 @@ function SlashCmdList.DETAILS (msg, editbox)
 		local f = MacroFrameTextBackground
 		local backdrop = MacroFrameTextBackground:GetBackdrop()
 		
-		vardump (backdrop)
-		vardump (backdrop.insets)
+		Details.VarDump (backdrop)
+		Details.VarDump (backdrop.insets)
 		
 		print ("bgcolor:",f:GetBackdropColor())
 		print ("bordercolor",f:GetBackdropBorderColor())
@@ -865,9 +866,7 @@ function SlashCmdList.DETAILS (msg, editbox)
 		_detalhes:ApplyProfile (profile, false)
 	
 	elseif (msg == "users" or msg == "version" or msg == "versioncheck") then
-		_detalhes.users = {{UnitName("player"), GetRealmName(), (_detalhes.userversion or "") .. " (" .. _detalhes.APIVersion .. ")"}}
-		_detalhes.sent_highfive = GetTime()
-		_detalhes:SendRaidData (_detalhes.network.ids.HIGHFIVE_REQUEST)
+		Details.SendHighFive()
 
 		print (Loc ["STRING_DETAILS1"] .. "highfive sent, HI!")
 	
@@ -990,95 +989,6 @@ function SlashCmdList.DETAILS (msg, editbox)
 				print (Loc ["STRING_DETAILS1"] .. "diagnostic for character " .. rest .. " turned on.")
 				return
 			end
-			
-			local current_combat = _detalhes.tabela_vigente
-			
-			if (not _detalhes.DebugWindow) then
-				_detalhes.DebugWindow = _detalhes.gump:CreateSimplePanel (UIParent, 800, 600, "Details! Debug", "DetailsDebugPanel")
-				local TextBox = _detalhes.gump:NewSpecialLuaEditorEntry (_detalhes.DebugWindow, 760, 560, "text", "$parentTextEntry", true)
-				TextBox:SetPoint ("center", _detalhes.DebugWindow, "center", 0, -10)
-				TextBox:SetBackdrop ({edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1, bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tileSize = 64, tile = true})
-				TextBox:SetBackdropColor (0, 0, 0, 0.9)
-				TextBox:SetBackdropBorderColor (0, 0, 0, 1)
-				_detalhes.DebugWindow.TextBox = TextBox
-			end
-			
-			local text = [[
-Hello World!
-Details! Damage Meter Debug
-Release Version: @VERSION Core Version: @CORE
-
-Update Thread Status:
-Tick Rate: @TICKRATE
-Threat Health: @TICKHEALTH
-Last Tick: @TICKLAST
-Next Tick In: @TICKNEXT
-
-Current Combat Status:
-ID: @COMBATID
-Container Status: @COMBATCONTAINERS
-Damage Container Actors: @COMBATDAMAGEACTORS actors found
-
-Parser Status:
-Parser Health: @PARSERHEALTH
-Parser Capture Status: @PARSERCAPTURE
-
-Lower Instance Status (window 1):
-Is Shown: @INSTANCESHOWN
-Segment Status: @INSTANCESEGMENT
-Damage Update Status: @INSTANCEDAMAGESTATUS
-
-]]
-			
-			text = text:gsub ([[@VERSION]], _detalhes.userversion)
-			text = text:gsub ([[@CORE]], _detalhes.realversion)
-
-			text = text:gsub ([[@TICKRATE]], _detalhes.update_speed)
-			text = text:gsub ([[@TICKHEALTH]], _detalhes:TimeLeft (_detalhes.atualizador) ~= 0 and "|cFF22FF22good|r" or "|cFFFF2222bad|r")
-			text = text:gsub ([[@TICKLAST]], _detalhes.LastUpdateTick .. " (" .. _detalhes._tempo - _detalhes.LastUpdateTick .. " seconds ago)")
-			text = text:gsub ([[@TICKNEXT]], _detalhes:TimeLeft (_detalhes.atualizador))
-			
-			text = text:gsub ([[@COMBATID]], _detalhes.combat_id)
-			text = text:gsub ([[@COMBATCONTAINERS]], _detalhes.tabela_vigente[1] and _detalhes.tabela_vigente[2] and _detalhes.tabela_vigente[3] and _detalhes.tabela_vigente[4] and "|cFF22FF22good|r" or "|cFFFF2222bad|r")
-			text = text:gsub ([[@COMBATDAMAGEACTORS]], #_detalhes.tabela_vigente[1] and _detalhes.tabela_vigente[1]._ActorTable and #_detalhes.tabela_vigente[1]._ActorTable)
-			
-			text = text:gsub ([[@PARSERHEALTH]], _detalhes.parser_frame:GetScript ("OnEvent") == _detalhes.OnParserEvent and "|cFF22FF22good|r" or "|cFFFF2222bad|r")
-			
-			local captureStr = ""
-			for _ , captureName in ipairs (_detalhes.capture_types) do
-				if (_detalhes.capture_current [captureName]) then
-					captureStr = captureStr .. " " .. captureName .. ": |cFF22FF22okay|r"
-				else
-					captureStr = captureStr .. " " .. captureName .. ": |cFFFF2222X|r"
-				end
-			end
-			text = text:gsub ([[@PARSERCAPTURE]], captureStr)
-			
-			local instance = _detalhes:GetLowerInstanceNumber()
-			if (instance) then
-				instance = _detalhes:GetInstance (instance)
-			end
-			
-			if (instance) then
-				if (instance:IsEnabled()) then
-					text = text:gsub ([[@INSTANCESHOWN]], "|cFF22FF22good|r")
-				else
-					text = text:gsub ([[@INSTANCESHOWN]], "|cFFFFFF22not visible|r")
-				end
-				
-				text = text:gsub ([[@INSTANCESEGMENT]], (instance.showing == _detalhes.tabela_vigente and "|cFF22FF22good|r" or "|cFFFFFF22isn't the current combat object|r") .. (" window segment: " .. instance:GetSegment()))
-				
-				text = text:gsub ([[@INSTANCEDAMAGESTATUS]], (_detalhes._tempo - (_detalhes.LastFullDamageUpdate or 0)) < 3 and "|cFF22FF22good|r" or "|cFFFF2222last update registered is > than 3 seconds, is there actors to show?|r")
-			else
-				text = text:gsub ([[@INSTANCESHOWN]], "|cFFFFFF22not found|r")
-				text = text:gsub ([[@INSTANCESEGMENT]], "|cFFFFFF22not found|r")
-				text = text:gsub ([[@INSTANCEDAMAGESTATUS]], "|cFFFFFF22not found|r")
-				
-			end
-
-			_detalhes.DebugWindow.TextBox:SetText (text)
-			
-			_detalhes.DebugWindow:Show()
 		end
 	
 	--> debug combat log
@@ -1524,7 +1434,7 @@ Damage Update Status: @INSTANCEDAMAGESTATUS
 		--> clear memory
 		collectgarbage()		
 
-		_detalhes:InstanciaCallFunction (_detalhes.gump.Fade, "in", nil, "barras")
+		_detalhes:InstanciaCallFunction (Details.FadeHandler.Fader, "in", nil, "barras")
 		_detalhes:InstanciaCallFunction (_detalhes.AtualizaSegmentos)
 		_detalhes:InstanciaCallFunction (_detalhes.AtualizaSoloMode_AfertReset)
 		_detalhes:InstanciaCallFunction (_detalhes.ResetaGump)
@@ -1586,20 +1496,13 @@ Damage Update Status: @INSTANCEDAMAGESTATUS
 		end
 
 	elseif (msg == "coach") then
-		if (not UnitIsGroupLeader("player")) then
-			Details:Msg("you aren't the raid leader.")
-			return
-		end
+		--if (not UnitIsGroupLeader("player")) then
+		--	Details:Msg("you aren't the raid leader.")
+		--	return
+		--end
 
-		Details.coach.enabled = not Details.coach.enabled
-
-		if (Details.coach.enabled) then
-			Details:Msg("coach enabled, good luck!")
-			Details:Msg("[raid leader] stay outside the raid.")
-			Details:Msg("[assistants] at least one player inside the raid need to have assistant.")
-			Details:Msg("[players] have an updated version of Details!.")
-			Details.Coach.Server.EnableCoach()
-			
+		if (not Details.coach.enabled) then
+			Details.Coach.WelcomePanel()
 		else
 			Details:Msg("coach disabled.")
 			Details.Coach.Disable()
@@ -1637,10 +1540,18 @@ Damage Update Status: @INSTANCEDAMAGESTATUS
 		end
 	
 	--BFA BETA
-	elseif (msg == "update") then
-		_detalhes:CopyPaste ([[https://www.wowinterface.com/downloads/info23056-DetailsDamageMeter8.07.3.5.html]])
+	--elseif (msg == "update") then
+	--	_detalhes:CopyPaste ([[https://www.wowinterface.com/downloads/info23056-DetailsDamageMeter8.07.3.5.html]])
 	
 	
+	elseif (msg == "ec") then
+		if (rest and tonumber(rest)) then
+			local combatToErase = tonumber(rest)
+			tremove(_detalhes.tabela_historico.tabelas, combatToErase)
+			Details:Msg("combat erased.")
+		end
+		return
+
 	elseif (msg == "share") then
 	
 		local f = {}
@@ -1756,6 +1667,8 @@ Damage Update Status: @INSTANCEDAMAGESTATUS
 			end
 			
 		end
+
+		print("|", msg)
 		
 		print (" ")
 		--local v = _detalhes.game_version .. "." .. (_detalhes.build_counter >= _detalhes.alpha_build_counter and _detalhes.build_counter or _detalhes.alpha_build_counter)
@@ -1771,15 +1684,21 @@ Damage Update Status: @INSTANCEDAMAGESTATUS
 		--print ("|cffffaeae/details|r |cffffff33" .. Loc ["STRING_SLASH_WIPECONFIG"] .. "|r: " .. Loc ["STRING_SLASH_WIPECONFIG_DESC"])
 		print ("|cffffaeae/details|r |cffffff33" .. "me" .. "|r: open the player breakdown for you.") --localize-me
 		print ("|cffffaeae/details|r |cffffff33" .. "spells" .. "|r: list of spells already saw.") --localize-me
-		
-		
+
 		--print ("|cffffaeae/details " .. Loc ["STRING_SLASH_WORLDBOSS"] .. "|r: " .. Loc ["STRING_SLASH_WORLDBOSS_DESC"])
 		print (" ")
 
-		local v = _detalhes.game_version .. "." .. (_detalhes.build_counter >= _detalhes.alpha_build_counter and _detalhes.build_counter or _detalhes.alpha_build_counter)
-		print (Loc ["STRING_DETAILS1"] .. "|cFFFFFF00DETAILS! VERSION|r: |cFFFFAA00R" .. (_detalhes.build_counter >= _detalhes.alpha_build_counter and _detalhes.build_counter or _detalhes.alpha_build_counter))
-		print (Loc ["STRING_DETAILS1"] .. "|cFFFFFF00GAME VERSION|r: |cFFFFAA00" .. _detalhes.game_version)
-
+		if (DetailsFramework.IsTBCWow()) then
+			--the burning crusade classic
+			local v = _detalhes.game_version .. "." .. (_detalhes.bcc_counter)
+			print (Loc ["STRING_DETAILS1"] .. "|cFFFFFF00DETAILS! VERSION|r: |cFFFFAA00BCC" .. _detalhes.bcc_counter)
+			print (Loc ["STRING_DETAILS1"] .. "|cFFFFFF00GAME VERSION|r: |cFFFFAA00" .. _detalhes.game_version)
+		else
+			--retail
+			local v = _detalhes.game_version .. "." .. (_detalhes.build_counter >= _detalhes.alpha_build_counter and _detalhes.build_counter or _detalhes.alpha_build_counter)
+			print (Loc ["STRING_DETAILS1"] .. "|cFFFFFF00DETAILS! VERSION|r: |cFFFFAA00R" .. (_detalhes.build_counter >= _detalhes.alpha_build_counter and _detalhes.build_counter or _detalhes.alpha_build_counter))
+			print (Loc ["STRING_DETAILS1"] .. "|cFFFFFF00GAME VERSION|r: |cFFFFAA00" .. _detalhes.game_version)
+		end
 	end
 end
 

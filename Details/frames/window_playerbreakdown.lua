@@ -242,21 +242,22 @@ function _detalhes:AbreJanelaInfo (jogador, from_att_change, refresh, ShiftKeyDo
 	end
 	
 	info:ShowTabs()
-	gump:Fade (info, 0)
+	Details.FadeHandler.Fader (info, 0)
+	Details:UpdateBreakdownPlayerList()
 	
 	--check which tab was selected and reopen that tab
-	if (info.selectedTab == "Summary") then
-		return jogador:MontaInfo()
-	else
-		--open tab
-		for index = 1, #_detalhes.player_details_tabs do
-			local tab = _detalhes.player_details_tabs [index]
-			if (tab:condition (info.jogador, info.atributo, info.sub_atributo)) then
-				if (tab.tabname == info.selectedTab) then
-					--_detalhes.player_details_tabs [index]:Click()
-					--_detalhes.player_details_tabs [index].onclick()
-					_detalhes.player_details_tabs [index]:OnShowFunc()
-				end
+--	if (info.selectedTab == "Summary") then
+--		return jogador:MontaInfo()
+--	else
+
+	--open tab
+	for index = 1, #_detalhes.player_details_tabs do
+		local tab = _detalhes.player_details_tabs [index]
+		if (tab:condition (info.jogador, info.atributo, info.sub_atributo)) then
+			if (tab.tabname == info.selectedTab) then
+				--_detalhes.player_details_tabs [index]:Click()
+				--_detalhes.player_details_tabs [index].onclick()
+				_detalhes.player_details_tabs [index]:OnShowFunc()
 			end
 		end
 	end
@@ -396,9 +397,9 @@ function _detalhes:FechaJanelaInfo (fromEscape)
 	if (info.ativo) then --> se a janela tiver aberta
 		--playerDetailWindow:Hide()
 		if (fromEscape) then
-			gump:Fade (info, "in")
+			Details.FadeHandler.Fader (info, "in")
 		else
-			gump:Fade (info, 1)
+			Details.FadeHandler.Fader (info, 1)
 		end
 		info.ativo = false --> sinaliza o addon que a janela esta agora fechada
 		
@@ -505,22 +506,22 @@ end
 ------------------------------------------------------------------------------------------------------------------------------
 
 local detalhe_infobg_onenter = function (self)
-	gump:Fade (self.overlay, "OUT") 
-	gump:Fade (self.reportar, "OUT")
+	Details.FadeHandler.Fader (self.overlay, "OUT") 
+	Details.FadeHandler.Fader (self.reportar, "OUT")
 end
 
 local detalhe_infobg_onleave = function (self)
-	gump:Fade (self.overlay, "IN")
-	gump:Fade (self.reportar, "IN")
+	Details.FadeHandler.Fader (self.overlay, "IN")
+	Details.FadeHandler.Fader (self.reportar, "IN")
 end
 
 local detalhes_inforeport_onenter = function (self)
-	gump:Fade (self:GetParent().overlay, "OUT")
-	gump:Fade (self, "OUT")
+	Details.FadeHandler.Fader (self:GetParent().overlay, "OUT")
+	Details.FadeHandler.Fader (self, "OUT")
 end
 local detalhes_inforeport_onleave = function (self)
-	gump:Fade (self:GetParent().overlay, "IN")
-	gump:Fade (self, "IN")
+	Details.FadeHandler.Fader (self:GetParent().overlay, "IN")
+	Details.FadeHandler.Fader (self, "IN")
 end
 
 function gump:CriaDetalheInfo (index)
@@ -545,12 +546,12 @@ function gump:CriaDetalheInfo (index)
 	info.bg.overlay:SetWidth (341)
 	info.bg.overlay:SetHeight (61)
 	info.bg.overlay:SetPoint ("TOPLEFT", info.bg, "TOPLEFT", -7, 6)
-	gump:Fade (info.bg.overlay, 1)
+	Details.FadeHandler.Fader (info.bg.overlay, 1)
 	
 	info.bg.reportar = gump:NewDetailsButton (info.bg, nil, nil, _detalhes.Reportar, _detalhes.playerDetailWindow, 10+index, 16, 16,
 	"Interface\\COMMON\\VOICECHAT-ON", "Interface\\COMMON\\VOICECHAT-ON", "Interface\\COMMON\\VOICECHAT-ON", "Interface\\COMMON\\VOICECHAT-ON", nil, "DetailsJanelaInfoReport1")
 	info.bg.reportar:SetPoint ("BOTTOMLEFT", info.bg.overlay, "BOTTOMRIGHT",  -33, 10)
-	gump:Fade (info.bg.reportar, 1)
+	Details.FadeHandler.Fader (info.bg.reportar, 1)
 	
 	info.bg:SetScript ("OnEnter", detalhe_infobg_onenter)
 	info.bg:SetScript ("OnLeave", detalhe_infobg_onleave)
@@ -678,7 +679,7 @@ function gump:SetaDetalheInfoTexto (index, p, arg1, arg2, arg3, arg4, arg5, arg6
 		info.bg.PetIcon:Hide()
 		info.bg.PetText:Hide()
 		info.bg.PetDps:Hide()
-		gump:Fade (info.bg.overlay, "IN")
+		Details.FadeHandler.Fader (info.bg.overlay, "IN")
 		info.IsPet = false
 	end
 	
@@ -1196,8 +1197,8 @@ local elvui_skin = function()
 	window.bg1:SetHorizTile (true)
 	window.bg1:SetSize (PLAYER_DETAILS_WINDOW_WIDTH, PLAYER_DETAILS_WINDOW_HEIGHT)
 	
-	window:SetBackdrop ({edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
-	window:SetBackdropColor (1, 1, 1, 1)
+	window:SetBackdrop ({edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1, bgFile = [[Interface\AddOns\Details\images\background]]})
+	window:SetBackdropColor (1, 1, 1, 0.3)
 	window:SetBackdropBorderColor (0, 0, 0, 1)
 	window.bg_icone_bg:Hide()
 	window.bg_icone:Hide()
@@ -1492,8 +1493,11 @@ local elvui_skin = function()
 	
 	--class icon
 	window.SetClassIcon = function (player, class)
+		if (player.spellicon) then
+			window.classe_icone:SetTexture(player.spellicon)
+			window.classe_icone:SetTexCoord(.1, .9, .1, .9)
 	
-		if (player.spec) then
+		elseif (player.spec) then
 			window.classe_icone:SetTexture ([[Interface\AddOns\Details\images\spec_icons_normal_alpha]])
 			window.classe_icone:SetTexCoord (_unpack (_detalhes.class_specs_coords [player.spec]))
 			--esta_barra.icone_classe:SetVertexColor (1, 1, 1)
@@ -1848,21 +1852,21 @@ function gump:CriaJanelaInfo()
 	}
 	
 	_detalhes:CreatePlayerDetailsTab ("Summary", Loc ["STRING_SPELLS"], --[1] tab name [2] localized name
-			function (tabOBject, playerObject) --[2] condition
+			function (tabOBject, playerObject) --[3] condition
 				if (playerObject) then 
 					return true 
 				else 
 					return false 
 				end
 			end, 
-			nil, --[3] fill function
-			function() --[4] onclick
+			nil, --[4] fill function
+			function() --[5] onclick
 				for _, tab in _ipairs (_detalhes.player_details_tabs) do
 					tab.frame:Hide()
 				end
 			end,
-			nil, --[5] oncreate
-			iconTableSummary --icon table
+			nil, --[6] oncreate
+			iconTableSummary --[7] icon table
 	)
 		
 		--> search key: ~avoidance --> begining of avoidance tab
@@ -2569,8 +2573,9 @@ function gump:CriaJanelaInfo()
 			height = 16,
 		}		
 		
-		_detalhes:CreatePlayerDetailsTab ("Avoidance", Loc ["STRING_INFO_TAB_AVOIDANCE"], --[1] tab name [2] localized name
-			function (tabOBject, playerObject)  --[2] condition
+		_detalhes:CreatePlayerDetailsTab ("Avoidance", --[1] tab name
+			Loc ["STRING_INFO_TAB_AVOIDANCE"],  --[2] localized name
+			function (tabOBject, playerObject)  --[3] condition
 				if (playerObject.isTank) then 
 					return true 
 				else 
@@ -2578,12 +2583,12 @@ function gump:CriaJanelaInfo()
 				end
 			end, 
 			
-			avoidance_fill, --[3] fill function
+			avoidance_fill, --[4] fill function
 			
-			nil, --[4] onclick
+			nil, --[5] onclick
 			
-			avoidance_create, --[5] oncreate
-			iconTableAvoidance
+			avoidance_create, --[6] oncreate
+			iconTableAvoidance --[7] icon
 		)
 	
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2803,7 +2808,6 @@ function gump:CriaJanelaInfo()
 	end
 	
 	local auras_tab_fill = function (tab, player, combat)
-		
 		local miscActor = combat:GetActor (4, player:name())
 		local combatTime = combat:GetCombatTime()
 		
@@ -2841,16 +2845,17 @@ function gump:CriaJanelaInfo()
 		height = 16,
 	}	
 	
-	_detalhes:CreatePlayerDetailsTab ("Auras", "Auras", --[1] tab name [2] localized name
-		function (tabOBject, playerObject)  --[2] condition
+	_detalhes:CreatePlayerDetailsTab ("Auras", --[1] tab name
+		"Auras",  --[2] localized name
+		function (tabOBject, playerObject)  --[3] condition
 			return true
 		end, 
 		
-		auras_tab_fill, --[3] fill function
+		auras_tab_fill, --[4] fill function
 		
-		nil, --[4] onclick
+		nil, --[5] onclick
 		
-		auras_tab_create, --[5] oncreate
+		auras_tab_create, --[6] oncreate
 		iconTableAuras --icon table
 	)
 
@@ -3276,8 +3281,13 @@ function gump:CriaJanelaInfo()
 					--main player - seta no primeiro box
 						local spellid = data [1].id
 						local name, _, icon = _GetSpellInfo (spellid)
+
+						if (not name) then
+							--no spell found? - tbc problem
+							return
+						end
+
 						local petName = data [3]
-						
 						bar [1]:SetTexture (icon) --bar[1] = spellicon bar[2] = statusbar
 						bar [1]:SetTexCoord (unpack (IconTexCoord)) --bar[1] = spellicon bar[2] = statusbar
 
@@ -4771,8 +4781,9 @@ function gump:CriaJanelaInfo()
 			height = 14,
 		}
 		
-		_detalhes:CreatePlayerDetailsTab ("Compare", Loc ["STRING_INFO_TAB_COMPARISON"], --[1] tab name [2] localized name
-			function (tabOBject, playerObject)  --[2] condition
+		_detalhes:CreatePlayerDetailsTab ("Compare", --[1] tab name
+			Loc ["STRING_INFO_TAB_COMPARISON"],  --[2] localized name
+			function (tabOBject, playerObject)  --[3] condition
 				
 				if (info.atributo > 2) then
 					return false
@@ -4792,6 +4803,10 @@ function gump:CriaJanelaInfo()
 				tabOBject.player = playerObject
 				tabOBject.spells_amt = my_spells_total
 				
+				if (not info.instancia.showing) then
+					return false
+				end
+
 				for index, actor in _ipairs (info.instancia.showing [info.atributo]._ActorTable) do 
 					if (actor.classe == class and actor ~= playerObject) then
 
@@ -4841,20 +4856,17 @@ function gump:CriaJanelaInfo()
 				return true --debug?
 			end, 
 			
-			compare_fill, --[3] fill function
+			compare_fill, --[4] fill function
 			
-			nil, --[4] onclick
+			nil, --[5] onclick
 			
-			compare_create, --[5] oncreate
+			compare_create, --[6] oncreate
 			iconTableCompare --icon table
 		)
 		
 		-- ~compare ~newcompare
 		-- ~compare
-		
 
-
-		
 	
 	-- ~tab ~tabs
 		function este_gump:ShowTabs()
@@ -5734,7 +5746,7 @@ function gump:CriaNovaBarraInfo1 (instancia, index)
 	esta_barra.targets.texture:SetAllPoints()
 	esta_barra.targets.texture:SetDesaturated (true)
 	esta_barra.targets:SetAlpha (.7)
-	esta_barra.targets.texture:SetAlpha (.7)
+	esta_barra.targets.texture:SetAlpha (1)
 	esta_barra.targets:SetScript ("OnEnter", target_on_enter)
 	esta_barra.targets:SetScript ("OnLeave", target_on_leave)
 	
@@ -5753,7 +5765,7 @@ function gump:CriaNovaBarraInfo1 (instancia, index)
 	esta_barra.icone:SetHeight (CONST_BAR_HEIGHT)
 	esta_barra.icone:SetPoint ("RIGHT", esta_barra.textura, "LEFT", CONST_BAR_HEIGHT + 2, 0)
 	
-	esta_barra:SetAlpha(0.9)
+	esta_barra:SetAlpha(1)
 	esta_barra.icone:SetAlpha (1)
 	
 	esta_barra.isMain = true

@@ -1,46 +1,52 @@
-lightweight tag ea9ad32a7f8f3f245a3d0f2dec6baf07a43f2bec DetailsRetail.9.0.2.8000.144
+tag df6ed509de7ca6192062d05e83ffd876a6ccd40c DetailsRetail.9.1.5.9108.145
 Author:	Tercio Jose <terciob19@hotmail.com>
-Date:	Mon Nov 23 17:03:08 2020 -0300
+Date:	Tue Nov 2 19:31:28 2021 -0300
 
-commit ea9ad32a7f8f3f245a3d0f2dec6baf07a43f2bec
+commit e701c95fdd01ea64de1d88edadbc0698d90d43c7
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Mon Nov 23 17:03:08 2020 -0300
+Date:   Tue Nov 2 19:30:06 2021 -0300
 
-    Shaladownlands Launch
+    ToC Updates; Change logs; Framework update
 
-commit 3d5095bd2cfbd4bc71615928507bca2c8e7942f8
+commit 1536e16274a12337ba7f15f0469fcaf29d1e6abd
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Nov 4 12:02:52 2020 -0300
+Date:   Tue Oct 26 19:51:07 2021 -0300
 
-    Fix for hardcoded localizations
+    Ignoring some npcs on plaguefall
 
-commit bbef2496c58795a9507691f2e8be00a88ffd49a6
+commit 54916604484d50fb9ab9b7bdeea48898b0b6dbb7
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Nov 4 11:04:43 2020 -0300
+Date:   Sun Oct 24 14:32:42 2021 -0300
 
-    Coach feature update, moved check coach server to the top of the priority.
+    Fix for an error on classic era SoM
 
-commit 8f381f123597b95f11bddbd078a2ac5c984c5880
+commit 1ac9492e90b96c9a2a8e7b85ad20768adce37ea1
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Nov 4 10:50:04 2020 -0300
+Date:   Thu Oct 21 10:18:44 2021 -0300
 
-    More fixes and debug for the Coach feature
+    Removed print debug
 
-commit f4d801ce1212433cd75c17c4add578b9527b7e84
+commit d1c06a262cd77ac822a6952493d1a5d822e38662
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Nov 4 10:19:40 2020 -0300
+Date:   Wed Oct 20 15:28:08 2021 -0300
 
-    Use the sourceName from the comm callback instead of the player name from the com Data
+    No more damage done for mobs that doesn't award points
 
-commit 7de3c46897d720e43f9d2aba84ed402a53758ef2
+commit d905a0d38f1dc6e2490476b9c2992a1017bb046a
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Nov 4 09:39:03 2020 -0300
+Date:   Sat Oct 16 17:59:41 2021 -0300
 
-    Coach debug
+    Fixed some bugs with the /details stats
 
-commit 84a6c8b9dcab5e0f8eda796b27385bbef338de08
+commit 791ce4df93ea605f01403ec7e9a8017b1548feca
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Nov 4 09:22:59 2020 -0300
+Date:   Tue Oct 12 23:20:02 2021 -0300
 
-    Adding again the option to remove enemy players from battlegrounds.
+    weapon bar color
+
+commit d87611cfc50ea76de06cfd29c64e3bb966cedc02
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Oct 12 21:35:03 2021 -0300
+
+    Necrotic wake weapons
 

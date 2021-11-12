@@ -54,7 +54,9 @@ function Details:StartMeUp() --I'll never stop!
 			self:InitializePlaterIntegrationWindow()
 			self:InitializeMacrosWindow()
 
-			--self:InitializeCDTrackerWindow()
+			if (self.ocd_tracker.show_options) then
+				self:InitializeCDTrackerWindow()
+			end
 			
 		--custom window
 			self.custom = self.custom or {}
@@ -68,7 +70,7 @@ function Details:StartMeUp() --I'll never stop!
 			
 		--actor details window
 			self.playerDetailWindow = self.gump:CriaJanelaInfo()
-			self.gump:Fade(self.playerDetailWindow, 1)
+			Details.FadeHandler.Fader(self.playerDetailWindow, 1)
 			
 		--copy and paste window
 			self:CreateCopyPasteWindow()
@@ -234,7 +236,7 @@ function Details:StartMeUp() --I'll never stop!
 			
 			self.listener:RegisterEvent ("UNIT_FACTION")
 
-			if (not _G.DetailsFramework.IsClassicWow()) then
+			if (not _G.DetailsFramework.IsTimewalkWoW()) then
 				self.listener:RegisterEvent ("PET_BATTLE_OPENING_START")
 				self.listener:RegisterEvent ("PET_BATTLE_CLOSE")
 				self.listener:RegisterEvent ("PLAYER_SPECIALIZATION_CHANGED")
@@ -244,7 +246,6 @@ function Details:StartMeUp() --I'll never stop!
 			end
 
 			self.parser_frame:RegisterEvent ("COMBAT_LOG_EVENT_UNFILTERED")
-
 
 	--update is in group
 	self.details_users = {}
@@ -295,7 +296,7 @@ function Details:StartMeUp() --I'll never stop!
 	function self:AnnounceVersion()
 		for index, instancia in _detalhes:ListInstances() do
 			if (instancia.ativa) then
-				self.gump:Fade(instancia._version, "in", 0.1)
+				Details.FadeHandler.Fader(instancia._version, "in", 0.1)
 			end
 		end
 	end
@@ -367,7 +368,7 @@ function Details:StartMeUp() --I'll never stop!
 			dev_text:SetAlpha (.3)
 	
 			--version
-			self.gump:Fade (instance._version, 0)
+			Details.FadeHandler.Fader (instance._version, 0)
 			instance._version:SetText ("Details! " .. _detalhes.userversion .. " (core " .. self.realversion .. ")")
 			instance._version:SetTextColor (1, 1, 1, .35)
 			instance._version:SetPoint ("bottomleft", instance.baseframe, "bottomleft", 5, 1)
@@ -377,9 +378,9 @@ function Details:StartMeUp() --I'll never stop!
 			end
 
 			function _detalhes:FadeStartVersion()
-				_detalhes.gump:Fade (dev_icon, "in", 2)
-				_detalhes.gump:Fade (dev_text, "in", 2)
-				self.gump:Fade (instance._version, "in", 2)
+				Details.FadeHandler.Fader (dev_icon, "in", 2)
+				Details.FadeHandler.Fader (dev_text, "in", 2)
+				Details.FadeHandler.Fader (instance._version, "in", 2)
 			end
 			Details.Schedules.NewTimer(12, Details.FadeStartVersion, Details)
 		end
@@ -463,19 +464,19 @@ function Details:StartMeUp() --I'll never stop!
 	--coach feature startup
 	Details.Coach.StartUp()
 
-	--enforce to show 6 abilities on the tooltip
-	--_detalhes.tooltip.tooltip_max_abilities = 6 freeeeeedooommmmm
-
 	--force the group edit be always enabled when Details! starts
 	_detalhes.options_group_edit = true
 
+	--shutdown pre-pot announcer
+	Details.announce_prepots.enabled = false
+	--disable the min healing to show
+	Details.deathlog_healingdone_min =  1
 	--remove standard skin on 9.0.1
-		_detalhes.standard_skin = false
-	
-	--enforce to use the new animation code
-	if (_detalhes.streamer_config) then
-		_detalhes.streamer_config.use_animation_accel = true
-	end
+	_detalhes.standard_skin = false
+	--enforce to show 6 abilities on the tooltip
+	--_detalhes.tooltip.tooltip_max_abilities = 6 freeeeeedooommmmm
+
+	Details.InstallRaidInfo()
 
 	--Plater integration
 	C_Timer.After(2, function()
@@ -484,14 +485,116 @@ function Details:StartMeUp() --I'll never stop!
 	
 	--show warning message about classic beta
 	if (not DetailsFramework.IsClassicWow()) then
-		--print ("|CFFFFFF00[Details!]: Details! now has a separated version for Classic, Twitch app should give the right version, any issues report at Discord (/details discord).")
+
 	else
 		print ("|CFFFFFF00[Details!]: you're using Details! for RETAIL on Classic WOW, please get the classic version (Details! Damage Meter Classic WoW), if you need help see our Discord (/details discord).")
 	end
 
+	Details:InstallHook("HOOK_DEATH", Details.Coach.Client.SendMyDeath)
+
 	if (math.random(10) == 1) then
 		Details:Msg("use '/details me' macro to open the player breakdown for you!")
 	end
+
+	if (not DetailsFramework.IsTimewalkWoW()) then
+		Details.cached_specs[UnitGUID("player")] = GetSpecializationInfo(GetSpecialization() or 0)
+	end
+
+	if (not Details.data_wipes_exp["9"]) then
+		wipe(Details.encounter_spell_pool or {})
+		wipe(Details.boss_mods_timers or {})
+		wipe(Details.spell_school_cache or {})
+		wipe(Details.spell_pool or {})
+		wipe(Details.npcid_pool or {})
+		wipe(Details.current_exp_raid_encounters or {})
+		Details.data_wipes_exp["9"] = true
+	end
+
+	Details.boss_mods_timers.encounter_timers_dbm = Details.boss_mods_timers.encounter_timers_dbm or {}
+	Details.boss_mods_timers.encounter_timers_bw = Details.boss_mods_timers.encounter_timers_bw or {}
+
+	--clear overall data on new session
+	if (_detalhes.overall_clear_logout) then
+		_detalhes.tabela_overall = _detalhes.combate:NovaTabela()
+	end
+
+	if (not DetailsFramework.IsTimewalkWoW()) then
+		--wipe overall on torghast - REMOVE ON 10.0
+		local torghastTracker = CreateFrame("frame")
+		torghastTracker:RegisterEvent("JAILERS_TOWER_LEVEL_UPDATE")
+		torghastTracker:SetScript("OnEvent", function(self, event, level, towerType)
+			if (level == 1) then
+				if (Details.overall_clear_newtorghast) then
+					Details.historico:resetar_overall()
+					Details:Msg ("overall data are now reset.") --localize-me
+				end
+			end
+		end)
+	end
+
+	if (DetailsFramework.IsTBCWow()) then
+		--remover isso em versões mais atualizadas
+		if (_detalhes.bcc_counter == 18 or _detalhes.bcc_counter == 19) then
+			_detalhes.trash_auto_remove = false
+		end
+		
+		local originalPosition
+		local isOnOriginalPosition = true
+
+		local taintWarning = CreateFrame ("frame", nil, UIParent, "BackdropTemplate")
+		taintWarning:SetSize (500, 35)
+		taintWarning:SetFrameStrata ("low")
+
+		DetailsFramework:ApplyStandardBackdrop(taintWarning)
+	
+		local warningMessage = taintWarning:CreateFontString (nil, "overlay", "GameFontNormal")
+		warningMessage:SetText ("< right click and choose 'Enter Battle' if 'Enter Battle' button does not work")
+		
+		C_Timer.NewTicker(3, function() -- default = 1
+			if (not Details.DontMoveMinimapIconOnBattlegroundError) then
+				if (StaticPopup1:IsShown() or StaticPopup2:IsShown()) then
+					if (StaticPopup1.which == "ADDON_ACTION_FORBIDDEN" or (StaticPopup2 and StaticPopup2:IsShown() and StaticPopup2.which == "ADDON_ACTION_FORBIDDEN")) then
+
+						if (StaticPopup2:IsShown()) then
+							if (StaticPopup2.which == "ADDON_ACTION_FORBIDDEN") then
+								StaticPopup_Hide("ADDON_ACTION_FORBIDDEN")
+							end
+						end
+		
+						
+						if (MiniMapBattlefieldFrame:IsShown())then
+							taintWarning:Show()
+							taintWarning:SetPoint ("topleft", StaticPopup1, "bottomleft", 0, -10)
+							if (not originalPosition) then
+								local a = {}
+								for i = 1, MiniMapBattlefieldFrame:GetNumPoints() do
+									a[#a + 1] = {MiniMapBattlefieldFrame:GetPoint(i)}
+								end
+								originalPosition = a
+							end
+		
+							MiniMapBattlefieldFrame:ClearAllPoints()
+							MiniMapBattlefieldFrame:SetPoint("left", taintWarning, "left", 10, -2)
+							warningMessage:SetPoint ("left", MiniMapBattlefieldFrame, "right", 9, 0)
+							MiniMapBattlefieldFrame:SetFrameStrata("HIGH")
+
+							isOnOriginalPosition = false
+						end
+					end
+				else
+					if (originalPosition and not isOnOriginalPosition) then
+						MiniMapBattlefieldFrame:ClearAllPoints()
+						for i = 1, #originalPosition do
+							MiniMapBattlefieldFrame:SetPoint(unpack (originalPosition[i]))
+						end
+						taintWarning:Hide()
+						isOnOriginalPosition = true
+					end
+				end
+			end
+		end)
+	end
+
 
 	function Details:InstallOkey()
 		return true

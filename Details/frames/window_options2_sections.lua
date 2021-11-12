@@ -22,6 +22,8 @@ end
     ~15 - broadcaster
     ~16 - custom spells
     ~17 - charts data
+    ~18 - mythic dungeon
+    ~19 - search results
 --]]
 
 
@@ -334,11 +336,12 @@ do
                 name = Loc ["STRING_OPTIONS_ED"],
                 desc = Loc ["STRING_OPTIONS_ED_DESC"],
             },
+
             {--auto erase trash segments
                 type = "toggle",
-                get = function() return _detalhes.overall_clear_logout end,
+                get = function() return _detalhes.trash_auto_remove end,
                 set = function (self, fixedparam, value)
-                    _detalhes:SetOverallResetOptions(nil, nil, value)
+                    _detalhes.trash_auto_remove = value
                     afterUpdate()
                 end,
                 name = Loc ["STRING_OPTIONS_CLEANUP"],
@@ -373,7 +376,7 @@ do
                     afterUpdate()
                 end,
                 min = 1,
-                max = 30,
+                max = 40,
                 step = 1,
                 name = Loc ["STRING_OPTIONS_MAXSEGMENTS"],
                 desc = Loc ["STRING_OPTIONS_MAXSEGMENTS_DESC"],
@@ -387,7 +390,7 @@ do
                     afterUpdate()
                 end,
                 min = 1,
-                max = 30,
+                max = 40,
                 step = 1,
                 name = Loc ["STRING_OPTIONS_SEGMENTSSAVE"],
                 desc = Loc ["STRING_OPTIONS_SEGMENTSSAVE_DESC"],
@@ -617,6 +620,17 @@ do
                 desc = Loc ["STRING_OPTIONS_IGNORENICKNAME_DESC"],
             },
 
+            {--remove realm name
+                type = "toggle",
+                get = function() return _detalhes.remove_realm_from_name end,
+                set = function (self, fixedparam, value)
+                    _detalhes.remove_realm_from_name = value
+                    afterUpdate()
+                end,
+                name = Loc ["STRING_OPTIONS_REALMNAME"],
+                desc = Loc ["STRING_OPTIONS_REALMNAME_DESC"],
+            },
+
             {type = "blank"},
 
             {type = "label", get = function() return "Immersion" end, text_template = subSectionTitleTextTemplate}, --localize-me
@@ -644,7 +658,8 @@ do
 
         }
 
-        DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
+        sectionFrame.sectionOptions = sectionOptions
+        DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize+20, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
     tinsert(Details.optionsSection, buildSection) --optionsSection is declared on boot.lua
@@ -698,7 +713,7 @@ do
                 for key, value in pairs (currentInstance) do
                     if (_detalhes.instance_defaults[key] ~= nil) then
                         if (type (value) == "table") then
-                            savedObject[key] = table_deepcopy(value)
+                            savedObject[key] = Details.CopyTable(value)
                         else
                             savedObject[key] = value
                         end
@@ -725,7 +740,7 @@ do
                 for key, value in pairs (skinObject) do
                     if (key ~= "skin" and not _detalhes.instance_skin_ignored_values[key]) then
                         if (type (value) == "table") then
-                            instance[key] = table_deepcopy (value)
+                            instance[key] = Details.CopyTable (value)
                         else
                             instance[key] = value
                         end
@@ -997,6 +1012,7 @@ do
             },
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -1315,6 +1331,39 @@ do
                 desc = Loc ["STRING_OPTIONS_BAR_COLORBYCLASS_DESC"],
             },
 
+            {type = "blank"},
+            {type = "label", get = function() return "Arena Team Color" end, text_template = subSectionTitleTextTemplate},
+			{--team 1 color
+                type = "color",
+                get = function()
+                    local r, g, b = unpack(Details.class_colors.ARENA_GREEN)
+                    return {r, g, b, 1}
+                end,
+                set = function (self, r, g, b, a)
+                    Details.class_colors.ARENA_GREEN[1] = r
+                    Details.class_colors.ARENA_GREEN[2] = g
+                    Details.class_colors.ARENA_GREEN[3] = b
+                    afterUpdate()
+                end,
+                name = Loc ["STRING_COLOR"],
+                desc = "Arena team color",
+            },
+			{--team 2 color
+                type = "color",
+                get = function()
+                    local r, g, b = unpack(Details.class_colors.ARENA_YELLOW)
+                    return {r, g, b, 1}
+                end,
+                set = function (self, r, g, b, a)
+                    Details.class_colors.ARENA_YELLOW[1] = r
+                    Details.class_colors.ARENA_YELLOW[2] = g
+                    Details.class_colors.ARENA_YELLOW[3] = b
+                    afterUpdate()
+                end,
+                name = Loc ["STRING_COLOR"],
+                desc = "Arena team color",
+            },
+
             {type = "breakline"},
             {type = "label", get = function() return Loc ["STRING_OPTIONS_TEXT_ROWICONS_ANCHOR"] end, text_template = subSectionTitleTextTemplate},
 
@@ -1419,7 +1468,7 @@ do
             },
 
             {type = "blank"},
-            {type = "label", get = function() return "Inline Text (need better name)" end, text_template = subSectionTitleTextTemplate}, --localize-me
+            {type = "label", get = function() return "Aligned Text Columns" end, text_template = subSectionTitleTextTemplate}, --localize-me
 
             {--inline text enabled
                 type = "toggle",
@@ -1445,8 +1494,8 @@ do
                 min = 0,
                 max = 125,
                 step = 1,
-                name = "Text 1 Position",
-                desc = "Text 1 Position",
+                name = "Text 1 Offset",
+                desc = "Offset from right border",
             },
 
             {--lineText3 (in the middle)
@@ -1460,8 +1509,8 @@ do
                 min = 0,
                 max = 75,
                 step = 1,
-                name = "Text 2 Position",
-                desc = "Text 2 Position",
+                name = "Text 2 Offset",
+                desc = "Offset from right border",
             },
 
             {--lineText4 (closest to the right)
@@ -1475,8 +1524,8 @@ do
                 min = 0,
                 max = 50,
                 step = 1,
-                name = "Text 3 Position",
-                desc = "Text 3 Position",
+                name = "Text 3 Offset",
+                desc = "Offset from right border",
             },
 
             {type = "blank"},
@@ -1518,7 +1567,8 @@ do
             },
         }
 
-        DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
+        sectionFrame.sectionOptions = sectionOptions
+        DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize+20, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
     tinsert(Details.optionsSection, buildSection)
@@ -1875,6 +1925,7 @@ do
             },
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -2332,6 +2383,7 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -2629,6 +2681,7 @@ do
             },
             
         }
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -2741,6 +2794,8 @@ do
             },
 
         }
+
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
 
         do --> micro displays
@@ -3373,6 +3428,7 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -3611,6 +3667,7 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -3986,6 +4043,7 @@ do
             
         }
         
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
         refreshToggleAnchor()
     end
@@ -4133,6 +4191,7 @@ do
             },
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -4536,6 +4595,7 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
 
         sectionFrame:SetScript("OnShow", function()
@@ -4866,6 +4926,7 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(autoSwitchFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
 
 
@@ -4965,6 +5026,32 @@ do
         end
 
         Details.options.UpdateAutoHideSettings(currentInstance)
+
+        --> profile by spec
+        
+        --[=[]]
+        local spec1Table = {}
+        local playerSpecs = DF.ClassSpecIds [select (2, UnitClass("player"))]
+        for specID, _ in pairs (playerSpecs) do
+            local spec_id, specName, spec_description, spec_icon = GetSpecializationInfoByID(specID)
+            tinsert (spec1Table, {
+                type = "select",
+                get = function() 
+                    local specProfile = Details.profile_by_spec[specID]
+                    return specProfile
+                end,
+                values = function()
+                    local t = {}
+                    for profileName in pairs (__profiles) do
+                        t[#t+1] = profileName
+                    end
+                    return t
+                end,
+                name = specName,
+                desc = specName,
+            })
+        end
+        --]=]
     end
 
     tinsert(Details.optionsSection, buildSection)
@@ -5419,6 +5506,7 @@ do --raid tools
             },
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -5657,6 +5745,7 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX + 350, startY - 20 - 200, heightSize + 300, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -5817,6 +5906,7 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
@@ -6236,11 +6326,113 @@ do
 
         }
 
+        sectionFrame.sectionOptions = sectionOptions
         DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
     end
 
     tinsert(Details.optionsSection, buildSection)
 end
+
+-- ~18 - mythic dungeon section
+do
+    local buildSection = function(sectionFrame)
+
+        local sectionOptions = {
+            {type = "label", get = function() return Loc["STRING_OPTIONS_GENERAL_ANCHOR"] end, text_template = subSectionTitleTextTemplate},
+            {--always in combat
+                type = "toggle",
+                get = function() return Details.mythic_plus.always_in_combat end,
+                set = function (self, fixedparam, value)
+                    Details.mythic_plus.always_in_combat = value
+                end,
+                name = "Always in Combat",
+                desc = "Details won't create new segments for trash or boss and treat the run as a single segment.",
+            },
+
+            {--dedicated segment for bosses
+                type = "toggle",
+                get = function() return Details.mythic_plus.boss_dedicated_segment end,
+                set = function (self, fixedparam, value)
+                    Details.mythic_plus.boss_dedicated_segment = value
+                end,
+                name = "Boss Dedicated Segment",
+                desc = "If a boss is pulled while in combat, Details! close the combat and start a new one for the boss.",
+            },
+
+            {--make overall when done
+                type = "toggle",
+                get = function() return Details.mythic_plus.make_overall_when_done end,
+                set = function (self, fixedparam, value)
+                    Details.mythic_plus.make_overall_when_done = value
+                end,
+                name = "Make Overall Segment",
+                desc = "When the run is done, make an overall segment.",
+            },
+
+            {--overall only with bosses
+                type = "toggle",
+                get = function() return Details.mythic_plus.make_overall_boss_only end,
+                set = function (self, fixedparam, value)
+                    Details.mythic_plus.make_overall_boss_only = value
+                end,
+                name = "Overall Segment Boss Only",
+                desc = "Only add boss segments on the overall.",
+            },
+
+            {--merge trash
+                type = "toggle",
+                get = function() return Details.mythic_plus.merge_boss_trash end,
+                set = function (self, fixedparam, value)
+                    Details.mythic_plus.merge_boss_trash = value
+                end,
+                name = "Merge Trash",
+                desc = "Merge Trash",
+            },
+
+            {--delete merged trash
+                type = "toggle",
+                get = function() return Details.mythic_plus.delete_trash_after_merge end,
+                set = function (self, fixedparam, value)
+                    Details.mythic_plus.delete_trash_after_merge = value
+                end,
+                name = "Delete Merged Trash Segments",
+                desc = "After have the segment merged, if this option is enabled it'll delete those merged segments.",
+            },            
+
+            {--show chart popup
+                type = "toggle",
+                get = function() return Details.mythic_plus.show_damage_graphic end,
+                set = function (self, fixedparam, value)
+                    Details.mythic_plus.show_damage_graphic = value
+                end,
+                name = "Show Damage Charts",
+                desc = "Show Damage Charts",
+            },
+
+
+        }
+
+        sectionFrame.sectionOptions = sectionOptions
+        DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
+    end
+
+    tinsert(Details.optionsSection, buildSection)
+end
+
+-- ~19 - search results
+do
+    local buildSection = function(sectionFrame)
+
+        local sectionOptions = {
+
+        }
+
+        DF:BuildMenu(sectionFrame, sectionOptions, startX, startY-20, heightSize, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template)
+    end
+
+    tinsert(Details.optionsSection, buildSection)
+end
+
 
 --[[]
 do
@@ -6256,3 +6448,4 @@ do
     tinsert(Details.optionsSection, buildSection)
 end
 --]]
+

@@ -37,7 +37,7 @@ function _detalhes:CreateProfile (name)
 		end
 		
 	--> copy the default table
-		local new_profile = table_deepcopy (_detalhes.default_profile)
+		local new_profile = Details.CopyTable (_detalhes.default_profile)
 		new_profile.instances = {}
 	
 	--> add to global container
@@ -126,7 +126,7 @@ function _detalhes:SetProfileCProp (name, cprop, value)
 	
 	if (profile) then
 		if (type (value) == "table") then
-			rawset (profile, cprop, table_deepcopy (value))
+			rawset (profile, cprop, Details.CopyTable (value))
 		else
 			rawset (profile, cprop, value)
 		end
@@ -171,7 +171,7 @@ function _detalhes:ResetProfile (profile_name)
 		local instance = _detalhes:GetInstance (1)
 		local exported = instance:ExportSkin()
 		exported.__was_opened = instance:IsEnabled()
-		exported.__pos = table_deepcopy (instance:GetPosition())
+		exported.__pos = Details.CopyTable (instance:GetPosition())
 		exported.__locked = instance.isLocked
 		exported.__snap = {}
 		exported.__snapH = false
@@ -225,6 +225,8 @@ function _detalhes:ApplyProfile (profile_name, nosave, is_copy)
 			_detalhes:Msg ("Profile Not Found.")
 			return false
 		end
+
+		profile.ocd_tracker = nil --moved to local character saved
 		
 	--> always save the previous profile, except if nosave flag is up
 		if (not nosave) then
@@ -237,7 +239,7 @@ function _detalhes:ApplyProfile (profile_name, nosave, is_copy)
 			--> the entire key doesn't exist
 			if (profile [key] == nil) then
 				if (type (value) == "table") then
-					profile [key] = table_deepcopy (_detalhes.default_profile [key])
+					profile [key] = Details.CopyTable (_detalhes.default_profile [key])
 				else
 					profile [key] = value
 				end
@@ -255,10 +257,10 @@ function _detalhes:ApplyProfile (profile_name, nosave, is_copy)
 
 			if (type (value) == "table") then
 				if (key == "class_specs_coords") then
-					value = table_deepcopy (_detalhes.default_profile.class_specs_coords)
+					value = Details.CopyTable (_detalhes.default_profile.class_specs_coords)
 				end
 			
-				local ctable = table_deepcopy (value)
+				local ctable = Details.CopyTable (value)
 				_detalhes [key] = ctable
 			else
 				_detalhes [key] = value
@@ -339,7 +341,7 @@ function _detalhes:ApplyProfile (profile_name, nosave, is_copy)
 				--> copy skin
 				for key, value in pairs (skin) do
 					if (type (value) == "table") then
-						instance [key] = table_deepcopy (value)
+						instance [key] = Details.CopyTable (value)
 					else
 						instance [key] = value
 					end
@@ -372,7 +374,7 @@ function _detalhes:ApplyProfile (profile_name, nosave, is_copy)
 				if (_detalhes.profile_save_pos) then
 					--print ("is profile save pos", skin.__pos.normal.x, skin.__pos.normal.y)
 					if (skin.__pos) then
-						instance.posicao = table_deepcopy (skin.__pos)
+						instance.posicao = Details.CopyTable (skin.__pos)
 					else
 						if (not instance.posicao) then
 							print ("|cFFFF2222Details!: Position for a window wasn't found! Moving it to the center of the screen.|r\nType '/details exitlog' to check for errors.")
@@ -384,7 +386,7 @@ function _detalhes:ApplyProfile (profile_name, nosave, is_copy)
 					end
 
 					instance.isLocked = skin.__locked
-					instance.snap = table_deepcopy (skin.__snap) or {}
+					instance.snap = Details.CopyTable (skin.__snap) or {}
 					instance.horizontalSnap = skin.__snapH
 					instance.verticalSnap = skin.__snapV
 				else
@@ -532,7 +534,7 @@ function _detalhes:SaveProfile (saveas)
 			local current_value = _detalhes [key]
 
 			if (type (current_value) == "table") then
-				local ctable = table_deepcopy (current_value)
+				local ctable = Details.CopyTable (current_value)
 				profile [key] = ctable
 			else
 				profile [key] = current_value
@@ -546,9 +548,9 @@ function _detalhes:SaveProfile (saveas)
 			for index, instance in ipairs (_detalhes.tabela_instancias) do
 				local exported = instance:ExportSkin()
 				exported.__was_opened = instance:IsEnabled()
-				exported.__pos = table_deepcopy (instance:GetPosition())
+				exported.__pos = Details.CopyTable (instance:GetPosition())
 				exported.__locked = instance.isLocked
-				exported.__snap = table_deepcopy (instance.snap)
+				exported.__snap = Details.CopyTable (instance.snap)
 				exported.__snapH = instance.horizontalSnap
 				exported.__snapV = instance.verticalSnap
 				profile.instances [index] = exported
@@ -835,6 +837,16 @@ local default_profile = {
 			},
 		},
 
+		death_log_colors = {
+			damage = "red",
+			heal = "green",
+			friendlyfire = "darkorange",
+			cooldown = "yellow",
+			debuff = "purple",
+		},
+
+	fade_speed = 0.15,
+
 	--> minimap
 		minimap = {hide = false, radius = 160, minimapPos = 220, onclick_what_todo = 1, text_type = 1, text_format = 3},
 		data_broker_text = "",
@@ -871,8 +883,8 @@ local default_profile = {
 		},
 		
 	--> segments
-		segments_amount = 18,
-		segments_amount_to_save = 18,
+		segments_amount = 40,
+		segments_amount_to_save = 40,
 		segments_panic_mode = false,
 		segments_auto_erase = 1,
 		
@@ -922,7 +934,7 @@ local default_profile = {
 		memory_ram = 64,
 		remove_realm_from_name = true,
 		trash_concatenate = false,
-		trash_auto_remove = true,
+		trash_auto_remove = false,
 		world_combat_is_trash = false,
 		
 	--> death log
@@ -968,6 +980,7 @@ local default_profile = {
 		overall_flag = 0x10,
 		overall_clear_newboss = true,
 		overall_clear_newchallenge = true,
+		overall_clear_newtorghast = true,
 		overall_clear_logout = false,
 		data_cleanup_logout = false,
 		close_shields = false,
@@ -1096,23 +1109,25 @@ local default_profile = {
 
 _detalhes.default_profile = default_profile
 
-
-
 -- aqui fica as propriedades do jogador que n�o ser�o armazenadas no profile
 local default_player_data = {
 		coach = {
 			enabled = false,
+			welcome_panel_pos = {},
+			last_coach_name = false,
 		},
 
-	--> cd tracker
-		cd_tracker = {
-			pos = {},
+	--> ocd tracker test
+		ocd_tracker = {
 			enabled = false,
-			cds_enabled = {},
+			cooldowns = {},
+			pos = {},
 			show_conditions = {
 				only_in_group = true,
 				only_inside_instance = true,
-			}
+			},
+			show_options = false,
+			current_cooldowns = {},
 		},
 
 	--> force all fonts to have this outline
@@ -1121,6 +1136,7 @@ local default_player_data = {
 	--> current combat number
 		cached_specs = {},
 		cached_talents = {},
+		cached_roles = {},
 	
 		last_day = date ("%d"),
 	
@@ -1234,6 +1250,27 @@ local default_global_data = {
 		immersion_pets_on_solo_play = false, --pets showing when solo play
 		damage_scroll_auto_open = true,
 		damage_scroll_position = {},
+		data_wipes_exp = {
+			["9"] = false,
+			["10"] = false,
+			["11"] = false,
+			["12"] = false,
+			["13"] = false,
+			["14"] = false,
+		},
+		current_exp_raid_encounters = {},
+
+	--> all switch settings (panel shown when right click the title bar)
+		all_switch_config = {
+			scale = 1,
+			font_size = 10,
+		},
+		
+	--> profile by spec
+		profile_by_spec = {},
+	
+	--> displays by spec
+		displays_by_spec = {},
 		
 	--> death log
 		show_totalhitdamage_on_overkill = false,
@@ -1298,11 +1335,12 @@ local default_global_data = {
 		
 	--> min health done on the death report
 		deathlog_healingdone_min = 1,
+		deathlog_healingdone_min_arena = 400,
 		
 	--> mythic plus config
 		mythic_plus = {
 			always_in_combat = false, --
-			merge_boss_trash = false, --
+			merge_boss_trash = true, --
 			delete_trash_after_merge = true, --
 			--merge_boss_with_trash = false, --this won't be used
 			boss_dedicated_segment = true, --
@@ -1399,7 +1437,7 @@ function _detalhes:SaveProfileSpecial()
 			local current_value = _detalhes_database [key] or _detalhes_global [key] or _detalhes.default_player_data [key] or _detalhes.default_global_data [key]
 
 			if (type (current_value) == "table") then
-				local ctable = table_deepcopy (current_value)
+				local ctable = Details.CopyTable (current_value)
 				profile [key] = ctable
 			else
 				profile [key] = current_value
@@ -1454,17 +1492,17 @@ end
 function _detalhes:RestoreState_CurrentMythicDungeonRun()
 
 	--no need to check for mythic+ if the user is playing on classic wow
-	if (DetailsFramework.IsClassicWow()) then
+	if (DetailsFramework.IsTimewalkWoW()) then
 		return
 	end
 
 	local savedTable = _detalhes.mythic_dungeon_currentsaved
 	local mythicLevel = C_ChallengeMode.GetActiveKeystoneInfo()
 	local zoneName, _, _, _, _, _, _, currentZoneID = GetInstanceInfo()
-	
 	local mapID =  C_Map.GetBestMapForUnit ("player")
 	
 	if (not mapID) then
+		--print("D! no mapID to restored mythic dungeon state.")
 		return
 	end
 	
@@ -1491,16 +1529,24 @@ function _detalhes:RestoreState_CurrentMythicDungeonRun()
 				_detalhes.MythicPlus.PreviousBossKilledAt = savedTable.previous_boss_killed_at
 				_detalhes.MythicPlus.IsRestoredState = true
 				DetailsMythicPlusFrame.IsDoingMythicDungeon = true
+
+				print("D! (debug) mythic dungeon state restored.")
 				
 				C_Timer.After (2, function()
 					_detalhes:SendEvent ("COMBAT_MYTHICDUNGEON_START")
 				end)
 				return
+			else
+				print("D! (debug) mythic level isn't equal.", mythicLevel, savedTable.level)
 			end
+		else
+			print("D! (debug) zone name or zone Id isn't the same:", zoneName, savedTable.dungeon_name, currentZoneID, savedTable.dungeon_zone_id)
 		end
 		
 		--> mythic run is over
 		savedTable.started = false
+	else
+		--print("D! savedTable.stated isn't true.")
 	end
 end
 
@@ -1672,10 +1718,29 @@ function Details:ImportProfile (profileString, newProfileName)
 				end
 			end
 		end
-		
+
+		--profile imported, set mythic dungeon to default settings
+		local mythicPlusSettings = Details.mythic_plus
+		mythicPlusSettings.always_in_combat = false
+		mythicPlusSettings.merge_boss_trash = true
+		mythicPlusSettings.delete_trash_after_merge = true
+		mythicPlusSettings.boss_dedicated_segment = true
+		mythicPlusSettings.make_overall_when_done = true
+		mythicPlusSettings.make_overall_boss_only = false
+		mythicPlusSettings.show_damage_graphic = true
+		mythicPlusSettings.delay_to_show_graphic = 5
+		mythicPlusSettings.last_mythicrun_chart = {}
+		mythicPlusSettings.mythicrun_chart_frame = {}
+		mythicPlusSettings.mythicrun_chart_frame_minimized = {}
+		mythicPlusSettings.mythicrun_chart_frame_ready = {}
+
+		--make the max amount of segments be 30
+		Details.segments_amount = 40
+		Details.segments_amount_to_save = 40
+
 		--transfer instance data to the new created profile
 		profileObject.instances = DetailsFramework.table.copy ({}, profileData.instances)
-		
+
 		Details:ApplyProfile (newProfileName)
 		
 		Details:Msg ("profile successfully imported.")--localize-me
