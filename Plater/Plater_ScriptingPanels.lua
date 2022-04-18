@@ -77,7 +77,7 @@ options_button_template.backdropcolor = {.2, .2, .2, .8}
 Plater.APIList = {
 	{Name = "SetNameplateColor", 		Signature = "Plater.SetNameplateColor (unitFrame, color)", 				Desc = "Set the color of the nameplate.\n\nColor formats are:\n|cFFFFFF00Just Values|r: r, g, b\n|cFFFFFF00Index Table|r: {r, g, b}\n|cFFFFFF00Hash Table|r: {r = 1, g = 1, b = 1}\n|cFFFFFF00Hex|r: '#FFFF0000' or '#FF0000'\n|cFFFFFF00Name|r: 'yellow' 'white'\n\nCalling without passing width and height reset the color to default."},
 	{Name = "SetNameplateSize", 		Signature = "Plater.SetNameplateSize (unitFrame, width, height)",		Desc = "Adjust the nameplate size.\n\nCalling without passing width and height reset the size to default."},
-	{Name = "SetBorderColor", 			Signature = "Plater.SetBorderColor (self, r, g, b, a)",					Desc = "Set the border color.\n\nCalling without passing any color reset the color to default."},
+	{Name = "SetBorderColor", 			Signature = "Plater.SetBorderColor (unitFrame, r, g, b, a)",					Desc = "Set the border color.\n\nCalling without passing any color reset the color to default."},
 	
 	{Name = "SetCastBarColor", 			Signature = "Plater.SetCastBarColor (unitFrame, r, g, b)", 				Desc = "Set the cast bar color.\n\nColor formats are:\n|cFFFFFF00Just Values|r: r, g, b\n|cFFFFFF00Index Table|r: {r, g, b}\n|cFFFFFF00Hash Table|r: {r = 1, g = 1, b = 1}\n|cFFFFFF00Hex|r: '#FFFF0000' or '#FF0000'\n|cFFFFFF00Name|r: 'yellow' 'white'\n\nCalling without passing width and height reset the color to default."},
 	{Name = "SetCastBarSize", 			Signature = "Plater.SetCastBarSize (unitFrame, width, height)", 			Desc = "Adjust the cast bar size.\n\nCalling without passing width and height reset the size to default."},
@@ -87,6 +87,9 @@ Plater.APIList = {
 	{Name = "FlashNameplateBody", 		Signature = "Plater.FlashNameplateBody (unitFrame [, text [, duration]])", 	Desc = "Flash the healthbar portion of the nameplate, text and duration are optionals."},
 	
 	{Name = "NameplateHasAura", 		Signature = "Plater.NameplateHasAura (unitFrame, aura)",				Desc = "Return true if the aura is shown on nameplate.\n\nAura can be the buff name, debuff name or spellID."},	
+	{Name = "UnitHasAura", 		Signature = "Plater.UnitHasAura (unitFrame, aura)",				Desc = "Return true if the aura exist on the nameplate, visible or not.\n\nAura can be the buff name, debuff name or spellID."},	
+	{Name = "UnitHasEnrage", 		Signature = "Plater.UnitHasEnrage (unitFrame)",				Desc = "Return true if any of the auras is an enrage effect."},	
+	{Name = "UnitHasDispellable", 		Signature = "Plater.UnitHasDispellable (unitFrame)",				Desc = "Return true if there is any aura on the unit your character can remove at this moment (enrage, magic, etc)."},	
 	{Name = "NameplateInRange", 		Signature = "Plater.NameplateInRange (unitFrame)", 					Desc = "Return true if the nameplate is in range of the selected spell for range check.\n\nIt also updates the range flag for unitFrame.namePlateInRange."},
 	
 	{Name = "GetNpcIDFromGUID", 		Signature = "Plater.GetNpcIDFromGUID (GUID)", 					Desc = "Extract the npcID from a GUID, guarantee to always return a number."},
@@ -1284,6 +1287,7 @@ end
 	
 		--icon selection
 		local script_icon_callback = function (texture)
+			mainFrame.ScriptIconButtonTexture = texture
 			mainFrame.ScriptIconButton:SetIcon (texture)
 		end
 		local script_icon_label = DF:CreateLabel (parent, "Icon:", DF:GetTemplate ("font", "ORANGE_FONT_TEMPLATE"))
@@ -1822,7 +1826,7 @@ function Plater.CreateHookingPanel()
 		--script name
 		scriptObject.Name = hookFrame.ScriptNameTextEntry.text
 		--script icon
-		scriptObject.Icon = hookFrame.ScriptIconButton:GetIconTexture()
+		scriptObject.Icon = hookFrame.ScriptIconButtonTexture or hookFrame.ScriptIconButton:GetIconTexture()
 		--script description
 		scriptObject.Desc = hookFrame.ScriptDescTextEntry.text
 		--script priority
@@ -2012,6 +2016,7 @@ function Plater.CreateHookingPanel()
 		hookFrame.ScriptNameTextEntry.text =  scriptObject.Name
 		hookFrame.ScriptNameTextEntry:ClearFocus()
 		hookFrame.ScriptIconButton:SetIcon (scriptObject.Icon)
+		hookFrame.ScriptIconButtonTexture = scriptObject.Icon
 		hookFrame.ScriptDescTextEntry.text = scriptObject.Desc or ""
 		hookFrame.ScriptDescTextEntry:ClearFocus()
 		hookFrame.ScriptPrioSlideEntry.value = round(scriptObject.Prio or 99)
@@ -2322,6 +2327,7 @@ function Plater.CreateHookingPanel()
 		hookFrame.ScriptNameTextEntry:SetText ("")
 		hookFrame.ScriptNameTextEntry:Disable()
 		hookFrame.ScriptIconButton:SetIcon ("")
+		hookFrame.ScriptIconButtonTexture = nil
 		hookFrame.ScriptIconButton:Disable()
 		hookFrame.ScriptDescTextEntry:SetText ("")
 		hookFrame.ScriptDescTextEntry:Disable()
@@ -3001,7 +3007,7 @@ function Plater.CreateScriptingPanel()
 		--script name
 		scriptObject.Name = scriptingFrame.ScriptNameTextEntry.text
 		--script icon
-		scriptObject.Icon = scriptingFrame.ScriptIconButton:GetIconTexture()
+		scriptObject.Icon = scriptingFrame.ScriptIconButtonTexture or scriptingFrame.ScriptIconButton:GetIconTexture()
 		--script description
 		scriptObject.Desc = scriptingFrame.ScriptDescTextEntry.text
 		--script prio
@@ -3297,6 +3303,7 @@ function Plater.CreateScriptingPanel()
 			scriptingFrame.ScriptNameTextEntry.text =  scriptObject.Name
 			scriptingFrame.ScriptNameTextEntry:ClearFocus()
 			scriptingFrame.ScriptIconButton:SetIcon (scriptObject.Icon)
+			scriptingFrame.ScriptIconButtonTexture = scriptObject.Icon
 			scriptingFrame.ScriptDescTextEntry.text = scriptObject.Desc or ""
 			scriptingFrame.ScriptDescTextEntry:ClearFocus()
 			scriptingFrame.ScriptPrioSlideEntry.value = round(scriptObject.Prio or 99)
@@ -3399,6 +3406,7 @@ function Plater.CreateScriptingPanel()
 			if (not scriptObject.Icon or scriptObject.Icon == "") then
 				local _, _, spellIcon = GetSpellInfo (spellId)
 				scriptingFrame.ScriptIconButton:SetIcon (spellIcon)
+				scriptingFrame.ScriptIconButtonTexture = spellIcon
 			end
 			
 		elseif (scriptObject.ScriptType == 3) then

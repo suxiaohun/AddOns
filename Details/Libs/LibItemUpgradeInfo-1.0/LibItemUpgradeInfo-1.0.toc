@@ -1,4 +1,4 @@
-## Interface: 90105
+## Interface: 90200
 ## Title: Lib: ItemUpgradeInfo-1.0
 ## Notes: Database of item upgrade IDs
 ## Author: eridius

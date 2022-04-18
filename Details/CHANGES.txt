@@ -1,52 +1,64 @@
-tag df6ed509de7ca6192062d05e83ffd876a6ccd40c DetailsRetail.9.1.5.9108.145
+tag faa11788412efdc6eb2de9c0ba9884ec97e52b43 DetailsRetail.9.2.0.9735.146
 Author:	Tercio Jose <terciob19@hotmail.com>
-Date:	Tue Nov 2 19:31:28 2021 -0300
+Date:	Mon Apr 11 16:20:52 2022 -0300
 
-commit e701c95fdd01ea64de1d88edadbc0698d90d43c7
+commit 7762e29d0023ab25abda610c8851d2d490f12154
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Nov 2 19:30:06 2021 -0300
+Date:   Mon Apr 11 15:52:24 2022 -0300
 
-    ToC Updates; Change logs; Framework update
+    More fixes
 
-commit 1536e16274a12337ba7f15f0469fcaf29d1e6abd
+commit 80612f2d6f7c9ef43c6d90c66770e0cad717e232
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Oct 26 19:51:07 2021 -0300
+Date:   Mon Apr 11 10:59:21 2022 -0300
 
-    Ignoring some npcs on plaguefall
+    Bug Fix
 
-commit 54916604484d50fb9ab9b7bdeea48898b0b6dbb7
+commit 241200d6c0eb12bf336f3e94f0f4ab852a98c4e7
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sun Oct 24 14:32:42 2021 -0300
+Date:   Fri Apr 8 14:33:42 2022 -0300
 
-    Fix for an error on classic era SoM
+    Arena Enemy Player Deaths improvements
 
-commit 1ac9492e90b96c9a2a8e7b85ad20768adce37ea1
+commit a3e38a1e6afae0e8924c00de393e09dee3b901c8
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Thu Oct 21 10:18:44 2021 -0300
+Date:   Thu Apr 7 14:44:42 2022 -0300
 
-    Removed print debug
+    close the All Displays Panel on cooltip interaction
 
-commit d1c06a262cd77ac822a6952493d1a5d822e38662
+commit 2f94bd93b89e781248b669dbfd4e38047dc524a8
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Oct 20 15:28:08 2021 -0300
+Date:   Thu Apr 7 14:33:46 2022 -0300
 
-    No more damage done for mobs that doesn't award points
+    Added M+ Score into the player info tooltip (hover over the spec icon)
 
-commit d905a0d38f1dc6e2490476b9c2992a1017bb046a
+commit 2f94bd93b89e781248b669dbfd4e38047dc524a8
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sat Oct 16 17:59:41 2021 -0300
+Date:   Thu Apr 7 14:33:46 2022 -0300
 
-    Fixed some bugs with the /details stats
+    Added M+ Score into the player info tooltip (hover over the spec icon)
 
-commit 791ce4df93ea605f01403ec7e9a8017b1548feca
+commit 0a7b62701b603934a5697b951cfaa36a84655a8c
+Author: Flamanis <Flamanis@users.noreply.github.com>
+Date:   Fri Apr 1 15:29:00 2022 -0500
+
+    move_janela now actualizes both windows points
+
+commit 0a7b62701b603934a5697b951cfaa36a84655a8c
+Author: Flamanis <Flamanis@users.noreply.github.com>
+Date:   Fri Apr 1 15:29:00 2022 -0500
+
+    move_janela now actualizes both windows points
+
+commit 9a63dc12e0ae4f328f1e60093c8d8efafe43b9cd
+Author: Flamanis <Flamanis@users.noreply.github.com>
+Date:   Fri Apr 1 15:27:55 2022 -0500
+
+    Change safe_load to allow varargs for LoadProfile
+
+commit 0d8b09ffb7b93d35cc05f1eaf6d1afaa8ae82bef
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Oct 12 23:20:02 2021 -0300
+Date:   Fri Apr 1 11:38:04 2022 -0300
 
-    weapon bar color
-
-commit d87611cfc50ea76de06cfd29c64e3bb966cedc02
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Oct 12 21:35:03 2021 -0300
-
-    Necrotic wake weapons
+    Update on LibOpenRaid to version 24
 

@@ -27,7 +27,7 @@ LibSharedMedia:Register ("statusbar", "You Are Beautiful!", [[Interface\AddOns\P
 LibSharedMedia:Register ("statusbar", "PlaterBackground 2", [[Interface\AddOns\Plater\images\noise_background]])
 
 LibSharedMedia:Register ("font", "Oswald", [[Interface\Addons\Plater\fonts\Oswald-Regular.ttf]])
-LibSharedMedia:Register ("font", "Nueva Std Cond", [[Interface\Addons\Plater\fonts\NuevaStd-Cond.ttf]])
+LibSharedMedia:Register ("font", "Nueva Std Cond", [[Interface\Addons\Plater\fonts\Nueva Std Cond.ttf]])
 LibSharedMedia:Register ("font", "Accidental Presidency", [[Interface\Addons\Plater\fonts\Accidental Presidency.ttf]])
 LibSharedMedia:Register ("font", "TrashHand", [[Interface\Addons\Plater\fonts\TrashHand.TTF]])
 LibSharedMedia:Register ("font", "Harry P", [[Interface\Addons\Plater\fonts\HARRYP__.TTF]])
@@ -93,8 +93,8 @@ PLATER_DEFAULT_SETTINGS = {
 		npc_colors = {},
 
 		--store the cast colors customized by the user
-		cast_colors = {},
-		cast_color_settings = {
+		cast_colors = {}, --[spellId] = {[1] = color, [2] = enabled, [3] = custom spell name}
+		cast_color_settings = { --these are settings for the original cast color settings
 			enabled = true,
 			width = 12,
 			height_offset = 0,
@@ -541,15 +541,41 @@ PLATER_DEFAULT_SETTINGS = {
 		login_counter = 0,
 
 		--plater resources bar ~resources
-		plater_resources_show = false, --if the resource bar from plater is enabled
-		plater_resources_personal_bar = false, --if the resource bar shows in the personal bar intead of the current target
-		plater_resources_align = "horizontal", --combo points are horizontal alignment
-		plater_resources_grow_direction = "center",
-		plater_resources_show_depleted = true,
-		plater_resources_show_number = false,
-		plater_resources_anchor = {side = 8, x = 0, y = 40},
-		plater_resources_scale = 0.8,
-		plater_resources_padding = 2,
+		resources_settings = {
+			chr = {}, --store which resource model is used on each character
+			global_settings = {
+				show = false, --if the resource bar from plater is enabled
+				personal_bar = false, --if the resource bar shows in the personal bar intead of the current target
+				align = "horizontal", --combo points are horizontal alignment
+				grow_direction = "center",
+				show_depleted = true,
+				show_number = false,
+				anchor = {side = 8, x = 0, y = 40},
+				scale = 0.8,
+				padding = 2,
+			},
+			resource_options = {
+				--names below are from Enum.PowerType[<resource name>]
+				["ComboPoints"] = {
+
+				},
+				["HolyPower"] = {
+
+				},
+				["Runes"] = {
+
+				},
+				["SoulShards"] = {
+
+				},
+				["Chi"] = {
+
+				},
+				["ArcaneCharges"] =  {
+
+				},
+			},
+		},
 
 		spell_prediction = { --not being used at the moment
 			enabled = false,
@@ -918,10 +944,100 @@ PLATER_DEFAULT_SETTINGS = {
 			["world"] =  true,
 			["cities"] = false,
 		},
-		
+
+		auto_inside_raid_dungeon = {
+			hide_enemy_player_pets = false,
+			hide_enemy_player_totems = false,
+		},
+
 		spell_animations = true,
 		spell_animations_scale = 1.25,
-		
+
+		--hold the npcs that has been rename on the Npcs tab, format: [npcId] = "new npc name"
+		npcs_renamed = {},
+
+		ghost_auras = {
+			enabled = false,
+			width = 0,
+			height = 0,
+			alpha = 0.5,
+			desaturated = true,
+			auras = {
+				["DEMONHUNTER"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+				},
+				["DEATHKNIGHT"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["WARRIOR"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["MAGE"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["ROGUE"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["DRUID"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+					[4] = {},
+				},
+				["HUNTER"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["SHAMAN"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["PRIEST"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["WARLOCK"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["PALADIN"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+				["MONK"] = {
+					[0] = {},
+					[1] = {},
+					[2] = {},
+					[3] = {},
+				},
+			},
+		},
+
 		spell_animation_list = {
 		
 			--chaos bolt

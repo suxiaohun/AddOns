@@ -130,9 +130,20 @@ function Details:StartMeUp() --I'll never stop!
 		end
 
 		function self:RefreshAfterStartup()
-		
+
+			--repair nicknames
+			local currentCombat = Details:GetCurrentCombat()
+			local containerDamage = currentCombat:GetContainer(DETAILS_ATTRIBUTE_DAMAGE)
+			for _, actorObject in containerDamage:ListActors() do
+				--get the actor nickname
+				local nickname = Details:GetNickname(actorObject:Name(), false, true)
+				if (nickname) then
+					actorObject.displayName = nickname
+				end
+			end
+
 			self:RefreshMainWindow(-1, true)
-			
+
 			local lower_instance = _detalhes:GetLowerInstanceNumber()
 
 			for index = 1, #self.tabela_instancias do
@@ -427,7 +438,7 @@ function Details:StartMeUp() --I'll never stop!
 	_detalhes:LoadFramesForBroadcastTools()
 	_detalhes:BrokerTick()
 	
-	--boss mobs callbacks (DBM and BigWigs)
+	--register boss mobs callbacks (DBM and BigWigs) -> functions/bossmods.lua
 	Details.Schedules.NewTimer(5, Details.BossModsLink, Details)
 
 	--limit item level life for 24Hs
@@ -594,6 +605,12 @@ function Details:StartMeUp() --I'll never stop!
 			end
 		end)
 	end
+
+	hooksecurefunc(GameCooltip, "SetMyPoint", function()
+		if (DetailsAllAttributesFrame) then
+			DetailsAllAttributesFrame:Hide()
+		end
+	end)
 
 
 	function Details:InstallOkey()

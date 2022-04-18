@@ -7,7 +7,40 @@ local _
 function Plater.GetChangelogTable()
 	if (not Plater.ChangeLogTable) then
 		Plater.ChangeLogTable = {
+			{1648130735,  "New Feature", "March 24rd, 2022", "Added into the 'Auto' section two options to hide Enemy Pets and Enemy Totems within raids and dungeons (default disabled).", "Terciob"},
 
+			{1647277135,  "Bug Fix", "March 23rd, 2022", "Don't show ghost auras on personal bar.", "cont1nuity"},
+			
+			{1647277035,  "Bug Fix", "March 21st, 2022", "Fixed an issue with the resources on the Plater resource bar not updating properly when disabling the 'Show Background' option.", "cont1nuity"},
+			{1647277035,  "New Feature", "March 18th, 2022", "Cast Colors options now actually changes the color of the cast bar, the old design now shows the original color of the cast.", "Terciob"},
+			{1647277035,  "New Feature", "March 17th, 2022", "Buff List and Npc Colors tab now show on the top entries from last segment, they are also highlight with yellow color.", "Terciob"},
+			{1647277035,  "New Feature", "March 17th, 2022", "Added 'Rename To' field on Npc Colors, use it to quick rename npcs.", "Terciob"},
+			{1647277035,  "New Feature", "March 14th, 2022", "Added Ghost Auras, ghost auras adds an extra icon to indicate a missing debuff on an enemy.", "Terciob"},
+			{1647277035,  "New Feature", "March 14th, 2022", "Added new script called 'Relics 9.2 M Dungeons' for the new Affix on Mythic+.", "Terciob"},
+			{1647277035,  "Bug Fix", "March 4th, 2022", "Ensure occlusion alpha is not overwritten by no combat alpha setting.", "cont1nuity"},
+			{1647277035,  "Backend Change", "February 25th, 2022", "NPC Colors list should be auto filled with Thorgast NPCs.", "cont1nuity"},
+			
+			{1645624151,  "Backend Change", "February 23rd, 2022", "Additional work on resources.", "cont1nuity"},
+			{1645624151,  "Backend Change", "February 23rd, 2022", "9.2 TOC update.", "cont1nuity"},
+			{1645624151,  "Bug Fix", "February 20th, 2022", "Fixing an issue with script icons breaking under some circumstances.", "cont1nuity"},
+			{1645624151,  "Bug Fix", "February 11th, 2022", "NPC Colors search should no longer break when the zone or name of an npc are unknown.", "cont1nuity"},
+			{1645624151,  "Bug Fix", "February 11th, 2022", "Small fixes for DK resource color.", "cont1nuity"},
+			{1645624151,  "Backend Change", "January 31st, 2022", "Range check range setting should not reset when selecting a range which is not native to your class/spec spells.", "cont1nuity"},
+			{1645624151,  "Backend Change", "January 28th, 2022", "Changing TBC max nameplate distance option to the correct value.", "cont1nuity"},
+			{1645624151,  "Backend Change", "January 28th, 2022", "Updating TOC for classic/tbc versions.", "cont1nuity"},
+			{1645624151,  "Bug Fix", "January 14th, 2022", "Fixing aura frame alpha settings for target/range alpha.", "cont1nuity"},
+			{1645624151,  "Backend Change", "January 10th, 2022", "Adding some missing functions to the scripting api list.", "cont1nuity"},
+			{1645624151,  "Backend Change", "January 4th, 2022", "'CreateFlash' API now handles color alpha values correctly.", "cont1nuity"},
+			{1645624151,  "Bug Fix", "January 2nd, 2022", "Font path fixed for 'Nueva Std Cond'.", "Terciob"},
+			{1645624151,  "Bug Fix", "December 21st, 2021", "Shaman elementals should now properly be recognized as pets.", "cont1nuity"},
+			
+			{1639859833,  "Backend Change", "December 9th, 2021", "Work on next feature: personal resources.", "Terciob"},
+			{1639859833,  "Bug Fix", "November 29th, 2021", "Limit 'View Distance' settings according to client limitations.", "cont1nuity"},
+			{1639859833,  "Bug Fix", "November 26th, 2021", "Only show cast colors if they are enabled.", "cont1nuity"},
+			{1639859833,  "Bug Fix", "November 24th, 2021", "Fixing issues with combo points in classic era (feature in development).", "cont1nuity"},
+			{1639859833,  "Bug Fix", "November 17th, 2021", "Fixing missing cast name in classic era.", "cont1nuity"},
+			{1639859833,  "Backend Change", "November 15th, 2021", "NPC-Cache entries will be kept on profile export if NPC-Colors are assigned.", "cont1nuity"},
+			
 			{1634909553,  "Backend Change", "October 31st, 2021", "TOC update for 9.1.5.", "cont1nuity"},
 			{1634909553,  "Backend Change", "October 31st, 2021", "Improvements to profile import and wrong data recognition.", "cont1nuity"},
 			{1634909553,  "Backend Change", "October 22nd, 2021", "Adjustments for tooltip backdrop changes in 9.1.5.", "cont1nuity"},

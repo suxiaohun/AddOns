@@ -203,8 +203,8 @@ function _detalhes:CreatePanicWarning()
 	_detalhes.instance_load_failed:SetPoint ("topright", UIParent, "topright", 0, -250)
 end
 
-local safe_load = function (func, param1, param2)
-	local okey, errortext = pcall (func, param1, param2)
+local safe_load = function (func, param1, ...)
+	local okey, errortext = pcall (func, param1, ...)
 	if (not okey) then
 		if (not _detalhes.instance_load_failed) then
 			_detalhes:CreatePanicWarning()
@@ -359,7 +359,7 @@ function _detalhes:ApplyProfile (profile_name, nosave, is_copy)
 				--> load data saved for this character only
 				instance:LoadLocalInstanceConfig()
 				if (skin.__was_opened) then
-					if (not safe_load (_detalhes.AtivarInstancia, instance)) then
+					if (not safe_load (_detalhes.AtivarInstancia, instance, nil, true)) then
 						return
 					end
 				else
@@ -528,7 +528,6 @@ function _detalhes:SaveProfile (saveas)
 		local profile = _detalhes:GetProfile (profile_name, true)
 
 	--> save default keys
-
 		for key, _ in pairs (_detalhes.default_profile) do 
 		
 			local current_value = _detalhes [key]
@@ -835,6 +834,11 @@ local default_profile = {
 				1, -- [2]
 				0, -- [3]
 			},
+			["SELF"] = {
+				0.89019, -- [1]
+				0.32156, -- [2]
+				0.89019, -- [3]
+			},
 		},
 
 		death_log_colors = {
@@ -846,12 +850,13 @@ local default_profile = {
 		},
 
 	fade_speed = 0.15,
+	use_self_color = false,
 
 	--> minimap
 		minimap = {hide = false, radius = 160, minimapPos = 220, onclick_what_todo = 1, text_type = 1, text_format = 3},
 		data_broker_text = "",
 		
-	--> horcorner
+	--> hotcorner
 		hotcorner_topleft = {hide = false},
 		
 	--> PvP
@@ -1220,7 +1225,7 @@ local default_player_data = {
 		},
 		
 	--> death panel buttons
-		on_death_menu = true,
+		on_death_menu = false,
 }
 
 _detalhes.default_player_data = default_player_data
