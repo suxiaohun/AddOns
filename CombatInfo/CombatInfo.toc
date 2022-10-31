@@ -1,6 +1,3 @@
-## Interface: 90200
+## Interface: 100000
 ## Title: CombatInfo
 ## Notes: this is my first addon.
-
-CombatInfo.lua
-CombatInfo.xml

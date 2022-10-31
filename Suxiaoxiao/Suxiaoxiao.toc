@@ -1,0 +1,9 @@
+## Interface: 100000
+## Title: Suxiaoxiao
+## Notes: This is my custom addon.
+
+Common.lua
+PlayerAttr.lua
+ScanRareUnit.lua
+DamageNumber.lua
+
