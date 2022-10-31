@@ -73,7 +73,9 @@ function UpdateStatInfo()
     end
 
     local moveSpeed = GetUnitSpeed("player") * 100 / 7
-    str = str .. "移速 " .. format("%.2f%%\n", moveSpeed)
+    if moveSpeed and moveSpeed >0 then
+        str = str .. "移速 " .. format("%.2f%%\n", moveSpeed)
+    end
 
     local dodge = GetDodgeChance()
     if dodge and dodge > 0 then
