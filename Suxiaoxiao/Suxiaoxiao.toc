@@ -1,9 +1,13 @@
 ## Interface: 100000
 ## Title: Suxiaoxiao
-## Notes: This is my custom addon.
+## Notes: This is suxiaoxiao's addon.
+## SavedVariables: MountDropDB
+##SavedVariablesPerCharacter: MountDropDB
 
 Common.lua
 PlayerAttr.lua
 ScanRareUnit.lua
 DamageNumber.lua
+MountDrop.lua
+# Suxiaoxiao.lua
 
