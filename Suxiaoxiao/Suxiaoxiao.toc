@@ -1,13 +1,18 @@
 ## Interface: 100000
 ## Title: Suxiaoxiao
-## Notes: This is suxiaoxiao's addon.
-## SavedVariables: MountDropDB
-##SavedVariablesPerCharacter: MountDropDB
+## Notes: This is Suxiaoxiao's addon
+##SavedVariablesPerCharacter: mountDropList
+## Version: 1.0.0
+## Author: Suxiaoxiao
+
+libs\Utils-1.0\Utils-1.0.lua
 
 Common.lua
 PlayerAttr.lua
 ScanRareUnit.lua
 DamageNumber.lua
 MountDrop.lua
+
+# texture.lua
 # Suxiaoxiao.lua
 

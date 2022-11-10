@@ -1,4 +1,6 @@
-scolor = {}
+local addonName,NS = ...
+
+NS.f = {}
 
 local color_table = {}
 color_table["red"] = "\027[31m"
@@ -23,7 +25,7 @@ color_table["underline"] = "\027[4m"
 color_table["bold"] = "\027[1m"
 color_table["clear"] = "\027[0m"
 
-function scolor.Sprintf(col, string)
+local function Sprintf(col, string)
     string = string or ""
     local c = "\027[32m"
     if color_table[col] then
@@ -31,3 +33,5 @@ function scolor.Sprintf(col, string)
     end
     return c .. string
 end
+
+NS.f.Sprintf = Sprintf
