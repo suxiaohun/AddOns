@@ -1,26 +1,26 @@
 
-local addonName,NS = ...
-
-local Sprintf = NS.f.Sprintf
-
-
---local CarnackiTestAddon = CreateFrame("Frame", nil, UIParent);
---local CarnackiTestAddonTexBG = CarnackiTestAddon:CreateTexture();
-----local CarnackiTestAddonTexTitle = CarnackiTestAddon:CreateTexture();
-----local CarnackiTestAddonTexDetails = CarnackiTestAddon:CreateTexture();
+--local addonName,NS = ...
 --
---CarnackiTestAddon:SetFrameStrata("MEDIUM");
---CarnackiTestAddon:SetWidth(600);
---CarnackiTestAddon:SetHeight(400);
---CarnackiTestAddon:SetPoint("CENTER");
---CarnackiTestAddon:SetMovable(true);
---CarnackiTestAddon:EnableMouse(true);
---
----- Main window background
---CarnackiTestAddon.texture = CarnackiTestAddonTexBG
---CarnackiTestAddonTexBG:SetAllPoints();
---CarnackiTestAddonTexBG:SetColorTexture(0.21,0.27,0.31);
---CarnackiTestAddonTexBG:SetAlpha(1.0);
+--local Sprintf = NS.f.Sprintf
+
+
+local CarnackiTestAddon = CreateFrame("Frame", nil, UIParent);
+local CarnackiTestAddonTexBG = CarnackiTestAddon:CreateTexture();
+--local CarnackiTestAddonTexTitle = CarnackiTestAddon:CreateTexture();
+--local CarnackiTestAddonTexDetails = CarnackiTestAddon:CreateTexture();
+
+CarnackiTestAddon:SetFrameStrata("MEDIUM");
+CarnackiTestAddon:SetWidth(600);
+CarnackiTestAddon:SetHeight(400);
+CarnackiTestAddon:SetPoint("CENTER");
+CarnackiTestAddon:SetMovable(true);
+CarnackiTestAddon:EnableMouse(true);
+
+-- Main window background
+CarnackiTestAddon.texture = CarnackiTestAddonTexBG
+CarnackiTestAddonTexBG:SetAllPoints();
+CarnackiTestAddonTexBG:SetColorTexture(0.21,0.27,0.31);
+CarnackiTestAddonTexBG:SetAlpha(1.0);
 --
 ---- Title background
 ----CarnackiTestAddon.texture = CarnackiTestAddonTexTitle
@@ -114,6 +114,106 @@ ChatFrame1:AddMessage(1111111)
 ChatFrame1:AddMessage(mountIDs)
 ChatFrame1:AddMessage(222222)
 
-local count = GetNumCompanions("MOUNT");
-ChatFrame1:AddMessage('Hello, I have collected a total of ' .. count .. ' mounts.');
+
+return
+
+
+--先从列表中移除当前角色已经存在的坐骑
+for i = 1, GetNumCompanions("MOUNT") do
+    local name, spellID, icon, isActive, isUsable, sourceType, isFavorite, isFactionSpecific, faction, shouldHideOnChar, isCollected, mountID = C_MountJournal.GetDisplayedMountInfo(i)
+    -- Assign local vars name and typeID from GetCompanionInfo(). Create unnasigned local var typeString.
+    --typeID = bit.band(3, typeID)
+    -- Bitwise AND operator sets typeID to 0 for water, 1 for ground and 3 for flying mounts.
+    --typeString = typeID == 0 and "Water" or typeID == 1 and "Ground" or "Flying"
+    -- Nested and..or operator to set typeString according to typeID.
+    --print(name, typeString)
+    --print(name)
+    ChatFrame1:AddMessage(i.."-"..mountID.."-"..name)
+    if boss_table[mountID] then
+        boss_table[mountID] = nil
+    end
+end
+
+--排序输出列表
+--已经CD的移动到最后，如何统计已经击杀的呢？第二天或第二周还要重置
+--未CD的按照地理位置排序
+local location
+local raid
+local list = ""
+
+local i = 0
+for _,v in pairs(boss_table) do
+    local location_texture = CarnackiTestAddon:CreateTexture();
+    location_texture:SetAllPoints();
+    --location_texture:SetPoint("TOPLEFT", 0 , i);
+    location_texture:SetColorTexture(1,1,0.5);
+    location_texture:SetAlpha(1.0);
+
+
+
+    -- Create the title fontstring
+    --CarnackiTestAddon.font = CarnackiTestAddonFSTitle
+    local location_text = CarnackiTestAddon:CreateFontString();
+    location_text:SetFont("Fonts\\FRIZQT__.TTF", 24);
+    location_text:SetPoint("TOP", 0 , -10);
+    location_text:SetTextColor(0,0,0);
+    location_text:SetText(v[1]);
+    location_text:SetAllPoints(location_texture);
+    i=i+10
+end
+
+--for k, v in pairs(boss_table) do
+--
+--    if location and location == v[1] then
+--
+--    else
+--        location = v[1]
+--        --print.red.bold.underline(location)
+--        list = list .. Sprintf("underline") .. (Sprintf("red", location)) .. Sprintf("clear") .. "\n"
+--    end
+--    if raid and raid == v[2] then
+--
+--    else
+--        raid = v[2]
+--        --print.bold.green("    " .. raid .. "(" .. v[3] .. ")")
+--        list = list .. Sprintf("bold") .. (Sprintf("green", "    " .. raid .. "(" .. v[3] .. ")")) .. "\n"
+--    end
+--    --print.pink("        [" .. v[4] .. "]\027[93m-->[" .. v[5] .. "%]")
+--    list = list .. Sprintf("pink", "        [" .. v[4] .. "]\027[93m-->[" .. v[5] .. "%]") .. "\n"
+--    --print.red.highlight(v[2].."-->"..v[3].."-->"..v[1])
+--end
+
+--local fruits = { { "banana", "aa", "cc" }, "orange", "apple" }
+--for k, v in ipairs(fruits) do
+--    print(k, v)
+--end
+
+--print(list)
+
+local frame = CreateFrame("Frame", nil, UIParent)
+frame:SetHeight(70)
+frame:SetWidth(270)
+frame:SetPoint("TOPLEFT", UIParent, "CENTER", 10, 120)
+
+local fs = frame:CreateFontString()
+fs:SetPoint("TOPLEFT", frame, "TOPLEFT", x, y)
+fs:SetFontObject(GameFontNormal)
+fs:SetFont("Fonts\\ARHei.ttf", 20, "OUTLINE, MONOCHROME")
+fs:SetText(list)
+
+
+
+--function X_OnDeath(pUnit, Event)
+--    local plr = pUnit:GetClosestPlayer()
+--    if plr ~= nil then
+--        local name = plr:GetName()
+--        local world = GetPlayersInWorld() -- I don't know if this needs pUnit in front of it.
+--        for a, plrs in pairs(world) do
+--            plrs:SendBroadcastMessage("This awesome boss of epix was just killed by  "..name.."!")
+--            plrs:SendAreaTriggerMessage("This awesome boss of epix was just killed by  "..name.."!")
+--        end
+--    end
+--end
+--
+--RegisterUnitEvent(npcid, 4, "X_OnDeath")
 

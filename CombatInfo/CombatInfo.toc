@@ -1,3 +1,0 @@
-## Interface: 100000
-## Title: CombatInfo
-## Notes: this is my first addon.
