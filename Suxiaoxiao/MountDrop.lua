@@ -109,10 +109,10 @@ boss_table[31] = { "逆风小径", "重返卡拉赞", "英雄难度", "午夜", 
 --    print(k,v)
 --end
 
-local mountIDs = C_MountJournal.GetMountIDs()
-ChatFrame1:AddMessage(1111111)
-ChatFrame1:AddMessage(mountIDs)
-ChatFrame1:AddMessage(222222)
+--local mountIDs = C_MountJournal.GetMountIDs()
+--ChatFrame1:AddMessage(1111111)
+--ChatFrame1:AddMessage(mountIDs)
+--ChatFrame1:AddMessage(222222)
 
 local count = GetNumCompanions("MOUNT");
 ChatFrame1:AddMessage('Hello, I have collected a total of ' .. count .. ' mounts.');
