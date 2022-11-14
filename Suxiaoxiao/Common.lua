@@ -13,5 +13,5 @@ QuestFont:SetFont("Fonts\\ARKai_T.ttf", 40, "")
 --SetCVar("nameplateSelectedScale", 1.5)
 --SET profanityFilter "0"
 --SET enableFloatingCombatText "0"
---SET floatingCombatTextCombatDamage "0"
---SetCVar(floatingCombatTextCombatDamage, 0
+--SET floatingCombatTextCombatDamage "1"
+SetCVar("floatingCombatTextCombatDamage", 1)

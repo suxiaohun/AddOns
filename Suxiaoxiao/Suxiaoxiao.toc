@@ -10,7 +10,7 @@ libs\Utils-1.0\Utils-1.0.lua
 Common.lua
 PlayerAttr.lua
 ScanRareUnit.lua
-DamageNumber.lua
+# DamageNumber.lua
 MountDrop.lua
 
 # texture.lua
