@@ -15,21 +15,14 @@ statFrame:SetPoint("TOP", UIParent, "CENTER", -300, 0)
 
 local sf1 = statFrame:CreateFontString()
 --statFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-statFrame:SetScript("OnEvent", function(event)
-    UpdateStatInfo()
-end
-)
 
-C_Timer.NewTicker(1, function()
-    UpdateStatInfo()
-end)
 
-function UpdateStatInfo()
-    mastery, coefficient = GetMasteryEffect()
-    base, effectiveArmor, armor, posBuff, negBuff = UnitArmor('player')
-    base, Agility, posBuff, negBuff = UnitStat("player", 2)
-    base, Stamina, posBuff, negBuff = UnitStat("player", 3)
-    lowDmg, hiDmg, offlowDmg, offhiDmg, posBuff, negBuff, percentmod = UnitDamage("player");
+local function UpdateStatInfo()
+    local mastery, coefficient = GetMasteryEffect()
+    --local base, effectiveArmor, armor, posBuff, negBuff = UnitArmor('player')
+    --local base, Agility, posBuff, negBuff = UnitStat("player", 2)
+    --local base, Stamina, posBuff, negBuff = UnitStat("player", 3)
+    --local lowDmg, hiDmg, offlowDmg, offhiDmg, posBuff, negBuff, percentmod = UnitDamage("player");
 
     local crit_chance_bons = 0
     for i = 1, 30 do
@@ -45,13 +38,13 @@ function UpdateStatInfo()
         end
     end
 
-    real_crit_chance = GetCritChance() + crit_chance_bons
+    local real_crit_chance = GetCritChance() + crit_chance_bons
 
     sf1:SetPoint("TOPLEFT", statFrame, "TOPLEFT")
     sf1:SetFontObject(GameFontNormal)
     sf1:SetFont("Fonts\\ARHei.ttf", 24, "OUTLINE, MONOCHROME")
 
-    str = "爆击 " .. format("%.2f%%\n", real_crit_chance)
+    local str = "爆击 " .. format("%.2f%%\n", real_crit_chance)
 
     if mastery and mastery > 0 then
         str = str .. "精通 " .. format("%.2f%%\n", mastery)
@@ -106,8 +99,70 @@ function UpdateStatInfo()
 end
 
 
+statFrame:SetScript("OnEvent", function(event)
+    UpdateStatInfo()
+end
+)
+
+C_Timer.NewTicker(1, function()
+    UpdateStatInfo()
+end)
 
 
+
+
+
+
+local player_attr_created = false
+
+local player_attr_created_db = {}
+
+local function CreateMinimapIcon()
+    if (player_attr_created) then
+        return
+    end
+
+    player_attr_created = true
+
+    local LDB = LibStub("LibDataBroker-1.1", true)
+    local LDBIcon = LDB and LibStub("LibDBIcon-1.0", true)
+
+    if LDB then
+        local minimapIcon = LDB:NewDataObject("playerAttr", {
+            type = "222 222",
+            --icon = [[Interface\MINIMAP\MOVIERECORDINGICON]],
+            icon = 134467,
+
+            OnClick = function(self, button)
+                local shown = statFrame:IsShown();
+
+                if (button == "LeftButton") then
+                    ChatFrame1:AddMessage(tostring(shown));
+                    if shown then
+                        statFrame:Hide()
+                    else
+                        statFrame:Show()
+                    end
+                    ChatFrame1:AddMessage("...click left");
+                elseif (button == "RightButton") then
+                    ChatFrame1:AddMessage("...click right");
+                end
+            end,
+
+            OnTooltipShow = function(tooltip)
+                tooltip:AddLine("实时属性", 1, 1, 1)
+                tooltip:AddLine("|cFFFF7700Left Click|r: 显示/隐藏.")
+                tooltip:AddLine("|cFFFF7700Right Click|r: none")
+            end,
+        })
+
+        if (minimapIcon and not LDBIcon:IsRegistered("playerAttr")) then
+            LDBIcon:Register("playerAttr", minimapIcon, player_attr_created_db)
+        end
+    end
+end
+
+CreateMinimapIcon()
 
 
 

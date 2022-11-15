@@ -1,6 +1,6 @@
 local addonName,NS = ...
 
-NS.f = {}
+NS.f = NS.f or {}
 
 local color_table = {}
 color_table["red"] = "\027[31m"

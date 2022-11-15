@@ -1,0 +1,9 @@
+## Interface: 100000
+## Title: Buttons
+## Notes: xxxxx
+
+#@no-lib-strip@
+embeds.xml
+#@end-no-lib-strip@
+
+Button-1.0.lua

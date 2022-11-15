@@ -5,7 +5,8 @@
 ## Version: 1.0.0
 ## Author: Suxiaoxiao
 
-libs\Utils-1.0\Utils-1.0.lua
+Libs\libs.xml
+Libs\Utils-1.0\Utils-1.0.lua
 
 Common.lua
 PlayerAttr.lua
