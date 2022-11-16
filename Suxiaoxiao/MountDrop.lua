@@ -132,15 +132,21 @@ ChatFrame1:AddMessage(tostring(mountIDs))
 local collectedMounts = {}
 local unCollectedRaidMounts = {}
 
-for index, mID in pairs(mountIDs) do
+for _, mID in pairs(mountIDs) do
     local name, spellID, icon, isActive, isUsable, sourceType, isFavorite, isFactionSpecific, faction, shouldHideOnChar, isCollected, mountID = C_MountJournal.GetMountInfoByID(mID)
 
     if isCollected then
-        collectedMounts[index] = { mID, name, icon, sourceType }
+        local creatureDisplayInfoID, description, source, isSelfMount, mountTypeID,
+        uiModelSceneID, animID, spellVisualKitID, disablePlayerMountPreview
+        = C_MountJournal.GetMountInfoExtraByID(mID)
+        table.insert(collectedMounts, { mID, name, icon, source })
         --print(index,mID, name)
     else
         if sourceType == 1 then
-            unCollectedRaidMounts[index] = { mID, name, icon, sourceType }
+            local creatureDisplayInfoID, description, source, isSelfMount, mountTypeID,
+            uiModelSceneID, animID, spellVisualKitID, disablePlayerMountPreview
+            = C_MountJournal.GetMountInfoExtraByID(mID)
+            table.insert(unCollectedRaidMounts, { mID, name, icon, source })
         end
     end
 end
@@ -223,8 +229,8 @@ collectedTitle:SetText("已收集坐骑列表")
 
 for i, v in pairs(collectedMounts) do
     local footer = collectedScrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-    footer:SetPoint("TOP", 0, -i * 15)
-    footer:SetWidth(400);
+    footer:SetPoint("TOP", 0, -i * 25)
+    footer:SetWidth(500);
     footer:SetJustifyH("LEFT");
     footer:SetText(i .. ": |T" .. v[3] .. ":16|t" .. v[2] .. "[" .. v[1] .. "]" .. v[3] .. "----" .. v[4])
 end
@@ -232,7 +238,7 @@ end
 ---uncollected panel
 local uncollectedPanel = CreateFrame("Frame", nil, UIParent)
 uncollectedPanel:SetFrameStrata("MEDIUM");
-uncollectedPanel:SetWidth(500);
+uncollectedPanel:SetWidth(600);
 uncollectedPanel:SetHeight(400);
 uncollectedPanel:SetPoint("CENTER");
 uncollectedPanel:SetMovable(true);
@@ -262,10 +268,11 @@ uncollectedTitle:SetText("未收集坐骑列表")
 
 for i, v in pairs(unCollectedRaidMounts) do
     local footer = uncollectedScrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-    footer:SetPoint("TOP", 0, -i * 15)
-    footer:SetWidth(400);
+    footer:SetPoint("TOP", 0, -i * 25)
+    footer:SetWidth(500);
     footer:SetJustifyH("LEFT");
-    footer:SetText(i .. ": |T" .. v[3] .. ":16|t" .. v[2] .. "[" .. v[1] .. "]" .. v[3] .. "----" .. v[4])
+    local source = v[4] or "未知"
+    footer:SetText(i .. ": |T" .. v[3] .. ":16|t" .. v[2] .. "[" .. v[1] .. "]"  .. "----" .. source)
 end
 
 ---todo 将头像图标也加入展示的文字信息？
