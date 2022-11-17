@@ -2,6 +2,8 @@
 -- *  Show player attributes details  *
 -- ************************************
 
+local addonName, NS = ...
+
 local statFrame = CreateFrame("Frame", nil, UIParent)
 statFrame:SetHeight(200)
 statFrame:SetMovable(true)
@@ -115,7 +117,7 @@ end)
 
 local player_attr_created = false
 
-local player_attr_created_db = {}
+
 
 local function CreateMinimapIcon()
     if (player_attr_created) then
@@ -134,6 +136,7 @@ local function CreateMinimapIcon()
             icon = 134467,
 
             OnClick = function(self, button)
+                print((select(4, GetBuildInfo())))
                 local shown = statFrame:IsShown();
 
                 if (button == "LeftButton") then
@@ -157,7 +160,11 @@ local function CreateMinimapIcon()
         })
 
         if (minimapIcon and not LDBIcon:IsRegistered("playerAttr")) then
-            LDBIcon:Register("playerAttr", minimapIcon, player_attr_created_db)
+            miniMapButtonPositionDB = miniMapButtonPositionDB or {}
+            miniMapButtonPositionDB["attr"] = miniMapButtonPositionDB["attr"] or {}
+            miniMapButtonPositionDB["attr"]["minimapPos"] = 180
+            miniMapButtonPositionDB["attr"]["hide"] = false
+            LDBIcon:Register("playerAttr", minimapIcon, miniMapButtonPositionDB.attr)
         end
     end
 end

@@ -1,7 +1,7 @@
-## Interface: 100000
+## Interface: 100002
 ## Title: Suxiaoxiao
 ## Notes: This is Suxiaoxiao's addon
-##SavedVariablesPerCharacter: mountDropList
+## SavedVariables: miniMapButtonPositionDB
 ## Version: 1.0.0
 ## Author: Suxiaoxiao
 
